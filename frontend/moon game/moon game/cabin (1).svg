@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" xmlns:c2pa="http://c2pa.org/manifest">
+  <style>
+    /* static background: no blinking, flicker or pulsing */
+    * { animation: none !important; }
+  </style>
+
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2744"/><stop offset=".45" stop-color="#0e1730"/><stop offset="1" stop-color="#060a15"/></linearGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#26365d"/><stop offset="1" stop-color="#0b1325"/></linearGradient>
+    <linearGradient id="slab" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#111b34"/><stop offset="1" stop-color="#050912"/></linearGradient>
+    <linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#103a6b"/><stop offset="1" stop-color="#0a1c3a"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <radialGradient id="earth" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#9fd0ff"/><stop offset=".35" stop-color="#2f86d8"/><stop offset=".75" stop-color="#0c3a7a"/><stop offset="1" stop-color="#041a3d"/></radialGradient>
+    <radialGradient id="moon" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#e9edf3"/><stop offset="1" stop-color="#6b7384"/></radialGradient>
+    <radialGradient id="vig" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".6"/></radialGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+
+    <!-- small console screen -->
+    <g id="scr-s">
+      <rect width="140" height="48" rx="4" fill="url(#scr)" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 16H90M12 26H120M12 36H70" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+      <circle cx="122" cy="14" r="5" fill="currentColor" class="blink"/>
+    </g>
+
+    <!-- side desk (left; the right one is a mirror) -->
+    <g id="desk">
+      <path d="M0 505L250 472L470 520L560 900H0Z" fill="url(#slab)"/>
+      <path d="M0 505L250 472L470 520L0 700Z" fill="url(#desk)"/>
+      <path d="M0 505L250 472L470 520" fill="none" stroke="#6ab4ff" stroke-width="3" filter="url(#glow)"/>
+      <path d="M60 590L220 556L300 584L130 632Z" fill="#0d1830" stroke="#6ab4ff" stroke-opacity=".5"/>
+      <path d="M80 592L215 562M95 604L240 572M115 616L260 582" stroke="#6ab4ff" stroke-opacity=".5" stroke-width="4" stroke-dasharray="6 6"/>
+      <path d="M320 495L400 512M335 510L420 528" stroke="#ffb066" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="350" cy="478" r="5" fill="#ffb066" class="blink"/><circle cx="385" cy="486" r="5" fill="#7ddba3" class="blink b2"/>
+      <g stroke="#6ab4ff" stroke-opacity=".35" fill="#0a1226">
+        <rect x="40" y="740" width="90" height="34" rx="4"/><rect x="150" y="740" width="90" height="34" rx="4"/>
+        <rect x="40" y="790" width="90" height="34" rx="4"/><rect x="150" y="790" width="90" height="34" rx="4"/>
+      </g>
+      <path d="M52 757H98M162 757H208M52 807H98M162 807H208" stroke="#ffb066" stroke-width="4" stroke-linecap="round" class="blink b3"/>
+    </g>
+  </defs>
+
+  <!-- ===== behind the wall: Earth and Moon seen through the windows ===== -->
+  <circle cx="800" cy="580" r="540" fill="url(#earth)"/>
+  <g fill="#3f7a45" opacity=".85"><ellipse cx="720" cy="140" rx="90" ry="38" transform="rotate(-12 720 140)"/><ellipse cx="900" cy="190" rx="70" ry="30"/><ellipse cx="640" cy="240" rx="55" ry="24"/><ellipse cx="1000" cy="130" rx="50" ry="20"/></g>
+  <g fill="#a58f5f" opacity=".7"><ellipse cx="800" cy="260" rx="60" ry="20"/><ellipse cx="560" cy="150" rx="40" ry="16"/></g>
+  <g fill="#fff" opacity=".3"><ellipse cx="760" cy="100" rx="120" ry="10"/><ellipse cx="900" cy="230" rx="150" ry="9"/><ellipse cx="600" cy="200" rx="90" ry="8"/></g>
+  <circle cx="800" cy="580" r="546" fill="none" stroke="#6ab4ff" stroke-width="12" opacity=".35" filter="url(#glow)"/>
+  <circle cx="350" cy="170" r="58" fill="url(#moon)"/>
+  <g fill="#000" opacity=".15"><circle cx="335" cy="155" r="10"/><circle cx="370" cy="185" r="14"/><circle cx="345" cy="195" r="7"/><circle cx="375" cy="150" r="6"/></g>
+
+  <!-- ===== wall with three angled windows ===== -->
+  <path fill-rule="evenodd" fill="url(#wall)" d="M0 0H1600V900H0Z M590 50L1010 50L1090 300L510 300Z M240 70L570 50L500 300L130 300Z M1030 50L1360 70L1470 300L1100 300Z"/>
+  <path d="M0 0L240 70M1600 0L1360 70M570 50L610 0M1030 50L990 0M0 150L130 300M1600 150L1470 300" stroke="#6c7ea3" stroke-opacity=".25" stroke-width="2" fill="none"/>
+  <path d="M10 20L225 80M1590 20L1375 80" stroke="#6ab4ff" stroke-width="5" stroke-linecap="round" filter="url(#glow)"/>
+  <g fill="none" stroke-linejoin="round">
+    <g stroke="#2b3a60" stroke-width="14"><polygon points="590,50 1010,50 1090,300 510,300"/><polygon points="240,70 570,50 500,300 130,300"/><polygon points="1030,50 1360,70 1470,300 1100,300"/></g>
+    <g stroke="#6ab4ff" stroke-width="2" opacity=".75" filter="url(#glow)"><polygon points="590,50 1010,50 1090,300 510,300"/><polygon points="240,70 570,50 500,300 130,300"/><polygon points="1030,50 1360,70 1470,300 1100,300"/></g>
+  </g>
+  <polygon points="590,50 1010,50 1090,300 510,300" fill="url(#glass)"/>
+
+  <!-- upper corner screens -->
+  <g class="flick">
+    <path d="M14 60L120 40L70 260L14 250Z" fill="#070d1f" stroke="#6ab4ff" stroke-width="3" filter="url(#glow)"/>
+    <path d="M60 110L85 150L45 200M85 150L100 90" stroke="#6ab4ff" stroke-opacity=".6" fill="none"/>
+    <circle cx="60" cy="110" r="4" fill="#ffb066" class="blink"/><circle cx="85" cy="150" r="3" fill="#b9d4ff"/><circle cx="45" cy="200" r="3" fill="#b9d4ff"/><circle cx="100" cy="90" r="3" fill="#7ddba3" class="blink b2"/>
+    <path d="M1586 60L1480 40L1530 260L1586 250Z" fill="#070d1f" stroke="#6ab4ff" stroke-width="3" filter="url(#glow)"/>
+    <path d="M1540 110L1515 150L1555 200M1515 150L1500 90" stroke="#6ab4ff" stroke-opacity=".6" fill="none"/>
+    <circle cx="1540" cy="110" r="4" fill="#ffb066" class="blink b3"/><circle cx="1515" cy="150" r="3" fill="#b9d4ff"/><circle cx="1555" cy="200" r="3" fill="#b9d4ff"/><circle cx="1500" cy="90" r="3" fill="#7ddba3" class="blink"/>
+  </g>
+
+  <!-- lower front panel with vents and center display -->
+  <path d="M160 380H1440L1500 640H100Z" fill="url(#slab)" stroke="#6ab4ff" stroke-opacity=".35"/>
+  <path d="M380 450H600M380 468H600M380 486H600M380 504H600M1000 450H1220M1000 468H1220M1000 486H1220M1000 504H1220" stroke="#6ab4ff" stroke-opacity=".3" stroke-width="3"/>
+  <rect x="700" y="440" width="200" height="90" rx="6" fill="#0a1a33" stroke="#ffb066" stroke-width="2"/>
+  <path d="M715 465H885M715 485H860M715 505H800" stroke="#ffb066" stroke-width="6" stroke-linecap="round" class="flick"/>
+  <g>
+    <circle cx="680" cy="570" r="4" fill="#ff6fa5" class="blink"/><circle cx="720" cy="570" r="4" fill="#7ddba3" class="blink b2"/><circle cx="760" cy="570" r="4" fill="#6ab4ff" class="blink b3"/>
+    <circle cx="840" cy="570" r="4" fill="#6ab4ff" class="blink"/><circle cx="880" cy="570" r="4" fill="#7ddba3" class="blink b2"/><circle cx="920" cy="570" r="4" fill="#ff6fa5" class="blink b3"/>
+  </g>
+
+  <!-- floor -->
+  <path d="M100 640H1500L1600 900H0Z" fill="url(#slab)"/>
+  <path d="M400 640L-160 900M600 640L320 900M800 640V900M1000 640L1280 900M1200 640L1760 900" stroke="#6ab4ff" stroke-opacity=".18" stroke-width="2"/>
+  <path d="M77 700H1523M46 770H1554M12 850H1588" stroke="#6ab4ff" stroke-opacity=".18" stroke-width="2"/>
+  <path d="M560 650L470 900M1040 650L1130 900" stroke="#6ab4ff" stroke-opacity=".5" stroke-width="4" filter="url(#glow)"/>
+
+  <!-- center console band with screens and radar -->
+  <path d="M260 300H1340L1440 380H160Z" fill="url(#desk)" stroke="#6ab4ff" stroke-width="3" filter="url(#glow)"/>
+  <use href="#scr-s" x="365" y="318" color="#6ab4ff"/><use href="#scr-s" x="545" y="318" color="#ffb066"/>
+  <use href="#scr-s" x="915" y="318" color="#7ddba3"/><use href="#scr-s" x="1095" y="318" color="#6ab4ff"/>
+  <rect x="725" y="308" width="150" height="64" rx="5" fill="url(#scr)" stroke="#ffb066" stroke-width="2"/>
+  <circle cx="800" cy="340" r="22" fill="none" stroke="#7ddba3" stroke-width="2"/>
+  <circle class="ring" cx="800" cy="340" r="22" fill="none" stroke="#7ddba3" stroke-width="2"/>
+  <path d="M800 340L818 326" stroke="#7ddba3" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- side desks (left, and a mirrored copy on the right) -->
+  <use href="#desk"/>
+  <use href="#desk" transform="matrix(-1 0 0 1 1600 0)"/>
+
+  <!-- big side monitors -->
+  <g class="flick">
+    <path d="M30 330L250 352L250 470L30 500Z" fill="url(#scr)" stroke="#6ab4ff" stroke-width="3" filter="url(#glow)"/>
+    <circle cx="120" cy="415" r="45" fill="#0b2a52"/>
+    <path d="M120 415L120 370A45 45 0 0 1 159 392Z" fill="#6ab4ff"/>
+    <path d="M120 415L159 392A45 45 0 0 1 142 454Z" fill="#ffb066"/>
+    <path d="M120 415L142 454A45 45 0 0 1 81 437Z" fill="#7ddba3"/>
+    <path d="M185 450V420M200 450V395M215 450V430M230 450V410" stroke="#6ab4ff" stroke-width="8"/>
+
+    <path d="M1570 330L1350 352L1350 470L1570 500Z" fill="url(#scr)" stroke="#6ab4ff" stroke-width="3" filter="url(#glow)"/>
+    <path d="M1380 455L1415 425L1450 440L1490 395L1540 415" fill="none" stroke="#ffb066" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="1415" cy="425" r="5" fill="#fff"/><circle cx="1490" cy="395" r="5" fill="#fff"/>
+    <circle cx="1470" cy="455" r="16" fill="none" stroke="#7ddba3" stroke-width="2"/><circle class="ring" cx="1470" cy="455" r="16" fill="none" stroke="#7ddba3" stroke-width="2"/>
+  </g>
+
+  <!-- edge shading -->
+  <rect width="1600" height="900" fill="url(#vig)"/>
+<metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTo0OTFjMTZhYi0wYjFiLTQzN2EtOTU1Ny03ZDJlMTljMmM4OTAAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaLL5imo3pPol+sNk48XWe5EAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDpkYjE1MGI4Yy04MzAyLTQyOWEtOTYwMy0xZWE2YTU4NzJlY2JscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNoz+OHX2eLU21hEe6jDgzxqQAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggTAiIeUvQXj5cYMcfe2Psx5Nrxm3PSo94EVOf9EfW5fWkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaIU+9EdrN8gmd03f+AEFHcIAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRMAAAAAAAAAAAAAAAAZGhhc2hYIPVTE5DH+aSFRkdc8nuKZ/yv4fuFe1fA/N1TR9Q3fb0TZG5hbWVuanVtYmYgbWFuaWZlc3RqZXhjbHVzaW9uc4GiZXN0YXJ0GScWZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjQ5MWMxNmFiLTBiMWItNDM3YS05NTU3LTdkMmUxOWMyYzg5MC9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOmZmYTAzNjdiLTk0MzMtNGU1ZS04MmJmLWRlNTAyYzI1NDM5NnJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCBMCIh5S9BePlxgxx97Y+zHk2vGbc9Kj3gRU5/0R9bl9aJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggOA4YbGVKR8WBORBy8G09D/7np8Mmh2XVPLsLiMLrvl6iY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFggqD5p2gSjeIGhDTA/+AmC+VEZw+giSUgZm8+5ahRfVAl0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQEv92KsC/XEvkMCVZ+IjkF8zXyidEe9tyqvHEjovSER/16i15TsedwGLAuvghf9mzMJR1pgFtB2FkSROa1Zpdbw=</c2pa:manifest></metadata></svg>

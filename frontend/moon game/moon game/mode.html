@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Little Astro’s Adventure | Choose Your Mission</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Big+Shoulders+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ===== page-only: category cards (theme colors) ===== */
+    .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; margin-top: 1.4rem; text-align: left; }
+    .mode-card {
+      --accent: var(--mint);
+      display: flex; flex-direction: column; gap: 1rem; padding: 1.4rem; position: relative; cursor: pointer;
+      color: var(--white); font: inherit; border-top: 4px solid var(--accent);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .mode-card.b { --accent: var(--pink); }
+    .mode-card:hover { transform: translateY(-4px); }
+    .mode-card.selected { box-shadow: 0 0 0 2px var(--lemon), 0 0 40px rgba(241,237,228,.22), 0 24px 60px rgba(0,0,0,.5); }
+    .pick { position: absolute; top: 1rem; right: 1.2rem; font-size: .8rem; color: #9aa7bf; letter-spacing: .04em; }
+    .selected .pick { color: var(--lemon); font-weight: 600; }
+    .mode-card h2 { margin: .5rem 0 0; font: 800 clamp(1.6rem, 4vw, 2.1rem)/1 var(--font-display); text-transform: uppercase; }
+    .tag { margin: .35rem 0 0; color: #b9c4d8; font-weight: 500; }
+    .diff { font-size: .85rem; color: #9aa7bf; margin-top: .6rem; }
+    .diff i { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; background: rgba(255,255,255,.15); margin-left: .25rem; }
+    .diff i.on { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+    .sys { display: flex; gap: .9rem; align-items: flex-start; }
+    .ico {
+      flex: none; width: 2.7rem; height: 2.7rem; display: grid; place-items: center; font-size: 1.4rem;
+      border-radius: .7rem; border: 1px solid var(--c); background: rgba(255,255,255,.06); transition: transform .15s ease;
+    }
+    .mode-card:hover .ico { transform: scale(1.08); }
+    .sys-body { flex: 1; min-width: 0; }
+    .sys-body b { font: 700 1.15rem var(--font-display); letter-spacing: .03em; text-transform: uppercase; }
+    .sys-body small { display: block; color: #b9c4d8; font-weight: 500; font-size: .92rem; margin: .1rem 0 .45rem; }
+    .mrow { display: flex; align-items: center; gap: .6rem; }
+    .val { font-size: .78rem; color: #9aa7bf; min-width: 3.4rem; text-align: right; }
+    .meter { flex: 1; height: .4rem; background: rgba(255,255,255,.12); border-radius: 99px; overflow: hidden; }
+    .meter i { display: block; height: 100%; width: var(--w); background: var(--c); border-radius: 99px; box-shadow: 0 0 10px var(--c); animation: fillbar 1.2s ease-out both; }
+    @keyframes fillbar { from { width: 0; } }
+
+    .incl { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; font-size: .9rem; color: #b9c4d8; font-weight: 500;
+            padding: .6rem .8rem; border: 1px dashed rgba(160,190,235,.35); border-radius: .7rem; }
+    .mini { width: 1.9rem; height: 1.9rem; display: grid; place-items: center; border-radius: .5rem; border: 1px solid var(--c); font-size: 1rem; }
+    .new { font: 700 .8rem var(--font-body); letter-spacing: .12em; color: var(--pink); text-transform: uppercase; margin-bottom: -.3rem; }
+    .foot { margin-top: auto; padding-top: .8rem; border-top: 1px solid var(--line); font-size: .9rem; color: #b9c4d8; font-weight: 500; }
+    .foot b { color: var(--white); }
+
+    .btn:disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+    #hint { margin: 1.2rem 0 0; color: #9aa7bf; font-weight: 500; min-height: 1.5em; }
+    @media (max-width: 720px) { .modes { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <div class="stars" id="stars" aria-hidden="true"></div>
+
+  <main class="screen">
+    <div style="width:min(60rem,100%)">
+
+      <span class="chip chip-mint">Mission category</span>
+      <h1 class="h2" style="margin-top:.8rem">Choose your mission</h1>
+      <p class="lead" id="who">Commander, pick how tough your mission will be.</p>
+
+      <div class="modes">
+
+        <!-- CATEGORY A -->
+        <button type="button" class="panel mode-card" data-mode="A" aria-pressed="false">
+          <span class="pick">Tap to choose</span>
+          <div>
+            <span class="chip chip-mint">Category A</span>
+            <h2>Core Survival</h2>
+            <p class="tag">Keep the basics alive and bring everyone home.</p>
+            <div class="diff" aria-label="Difficulty 2 of 5">Difficulty <i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+          </div>
+
+          <div class="sys" style="--c:var(--cyan)">
+            <span class="ico" aria-hidden="true">🌬️</span>
+            <div class="sys-body"><b>Life support</b><small>Keep oxygen flowing and the cabin air clean.</small>
+              <div class="mrow"><div class="meter"><i style="--w:82%"></i></div><span class="val">O₂ 82%</span></div></div>
+          </div>
+          <div class="sys" style="--c:#ffd166">
+            <span class="ico" aria-hidden="true">⚡</span>
+            <div class="sys-body"><b>Power budgeting</b><small>Every watt counts. Decide what stays on and what goes dark.</small>
+              <div class="mrow"><div class="meter"><i style="--w:64%"></i></div><span class="val">64%</span></div></div>
+          </div>
+          <div class="sys" style="--c:#ff6fa5">
+            <span class="ico" aria-hidden="true">📡</span>
+            <div class="sys-body"><b>Communication delay</b><small>Earth answers late. Some calls are yours alone.</small>
+              <div class="mrow"><div class="meter"><i style="--w:35%"></i></div><span class="val">1.3 s</span></div></div>
+          </div>
+
+          <div class="foot">Best for: <b>your first flight</b></div>
+        </button>
+
+        <!-- CATEGORY B -->
+        <button type="button" class="panel mode-card b" data-mode="B" aria-pressed="false">
+          <span class="pick">Tap to choose</span>
+          <div>
+            <span class="chip chip-pink">Category B</span>
+            <h2>Advanced Survival</h2>
+            <p class="tag">Everything in A, plus the hardest challenges in space.</p>
+            <div class="diff" aria-label="Difficulty 4 of 5">Difficulty <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+          </div>
+
+          <div class="incl">Includes all of Category A:
+            <span class="mini" style="--c:var(--cyan)" title="Life support">🌬️</span>
+            <span class="mini" style="--c:#ffd166" title="Power budgeting">⚡</span>
+            <span class="mini" style="--c:#ff6fa5" title="Communication delay">📡</span>
+          </div>
+
+          <div class="new">New challenges</div>
+          <div class="sys" style="--c:#5dffa6">
+            <span class="ico" aria-hidden="true">🌱</span>
+            <div class="sys-body"><b>Food production</b><small>Grow crops on board and keep the crew fed.</small>
+              <div class="mrow"><div class="meter"><i style="--w:48%"></i></div><span class="val">Crops 48%</span></div></div>
+          </div>
+          <div class="sys" style="--c:var(--pink)">
+            <span class="ico" aria-hidden="true">☢️</span>
+            <div class="sys-body"><b>Radiation shielding</b><small>Solar storms are coming. Block them before they hit.</small>
+              <div class="mrow"><div class="meter"><i style="--w:70%"></i></div><span class="val">Shield 70%</span></div></div>
+          </div>
+
+          <div class="foot">Best for: <b>veteran commanders</b></div>
+        </button>
+
+      </div>
+
+      <p id="hint">Choose a category to continue.</p>
+
+      <div class="actions" style="margin-top:1.2rem;justify-content:space-between">
+        <a class="btn btn-ghost" href="register.html">Back</a>
+        <button class="btn btn-play" type="button" id="go" disabled>Start mission</button>
+      </div>
+
+      <div class="level">
+        Step 4 of 4
+        <div class="level-bar"><div class="level-fill" style="--pct:100%"></div></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="stars.js"></script>
+  <script src="mode.js"></script>
+</body>
+</html>
