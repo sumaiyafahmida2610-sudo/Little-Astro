@@ -1,0 +1,303 @@
+/* =====================================================
+   MOON SURVIVOR: SHARED THEME (all 4+ pages use this)
+   Do not change colors/fonts here without telling the team.
+   ===================================================== */
+:root {
+  --space:   #140a3a;  /* page background */
+  --space-2: #2a1470;  /* panels, lighter purple */
+  --cyan:    #3df5ff;  /* info, oxygen */
+  --pink:    #ff4fd8;  /* accent, danger-ish */
+  --lemon:   #ffe14d;  /* main action (PLAY / NEXT) */
+  --mint:    #5dffa6;  /* good / success */
+  --white:   #fffaf0;  /* text */
+
+  --font-display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
+  --radius: 1.2rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  background: radial-gradient(ellipse at 50% -10%, #3a1d9a 0%, var(--space) 60%);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+:focus-visible { outline: 4px solid var(--cyan); outline-offset: 3px; }
+
+/* ---------- Background stars (made by app.js) ---------- */
+.stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.star {
+  position: absolute; border-radius: 50%; background: #fff;
+  animation: twinkle 3s ease-in-out infinite;
+}
+@keyframes twinkle { 0%, 100% { opacity: .15; } 50% { opacity: 1; } }
+
+/* ---------- Page wrapper: put page content inside .screen ---------- */
+.screen {
+  position: relative; z-index: 2;
+  min-height: 100vh; min-height: 100dvh;
+  padding: 1.5rem 1.2rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+}
+.screen[hidden] { display: none; }
+
+/* ---------- Text ---------- */
+.game-title {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(3rem, 12vw, 6.5rem); line-height: .95;
+  color: var(--lemon); margin: .6rem 0 1rem;
+  text-shadow: 0 5px 0 #c98a00, 0 10px 0 rgba(0,0,0,.35);
+}
+.h2 { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.8rem, 6vw, 3rem); margin: 0 0 .6rem; }
+.lead { max-width: 30rem; margin: 0 auto 1.6rem; font-size: 1.15rem; color: #e6dcff; }
+
+/* ---------- Buttons (chunky, press down like a game) ---------- */
+.btn {
+  font: 400 1.4rem var(--font-display);
+  border: 0; border-radius: 999px; cursor: pointer; text-decoration: none;
+  padding: .8rem 2.2rem; display: inline-block;
+  transition: transform .08s ease, border-width .08s ease;
+}
+.btn-play { background: var(--lemon); color: #3a2500; border-bottom: 7px solid #c98a00; }
+.btn-play:hover { background: #fff08a; }
+.btn-ghost { background: var(--space-2); color: var(--white); border-bottom: 7px solid #150845; font-size: 1.1rem; }
+.btn-ghost:hover { background: #3a1d9a; }
+.btn:active { transform: translateY(5px); border-bottom-width: 2px; }
+.actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; }
+
+/* ---------- Chips (small stat badges: oxygen, power...) ---------- */
+.chip {
+  display: inline-flex; align-items: center; gap: .45rem;
+  background: rgba(255,255,255,.1); border: 2px solid var(--chip, var(--cyan));
+  color: var(--white); padding: .35rem .9rem; border-radius: 999px; font-size: .95rem;
+}
+.chip-pink { --chip: var(--pink); }
+.chip-mint { --chip: var(--mint); }
+.chip-lemon { --chip: var(--lemon); }
+.chip-row { display: flex; gap: .6rem; flex-wrap: wrap; justify-content: center; margin-top: 1.8rem; }
+
+/* ---------- Panel / card (forms, briefing text, mode cards) ---------- */
+.panel {
+  background: var(--space-2); border: 3px solid var(--cyan);
+  border-radius: var(--radius); padding: 1.4rem;
+  box-shadow: 0 8px 0 #150845;
+}
+.panel.selected { border-color: var(--lemon); }
+
+/* ---------- Progress bar ("Level 1 of 4") ---------- */
+.level { width: min(18rem, 80vw); margin: 1.6rem auto 0; font-size: .9rem; color: #cbbdff; }
+.level-bar { height: .8rem; background: rgba(0,0,0,.35); border-radius: 99px; overflow: hidden; margin-top: .3rem; }
+.level-fill { height: 100%; width: var(--pct, 25%); background: linear-gradient(90deg, var(--mint), var(--cyan)); border-radius: 99px; }
+
+/* ---------- Dialog ---------- */
+dialog {
+  background: var(--space-2); color: var(--white);
+  border: 3px solid var(--pink); border-radius: var(--radius);
+  padding: 1.6rem; width: min(92vw, 25rem); text-align: center;
+}
+dialog::backdrop { background: rgba(10, 4, 30, .8); }
+dialog .actions { margin-top: 1.2rem; }
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* =====================================================
+   SHARED: FORMS (any page with inputs)
+   ===================================================== */
+.field { text-align: left; margin-bottom: 1.1rem; }
+.field label { display: block; font: 400 1.1rem var(--font-display); margin-bottom: .3rem; }
+.field input, .field select {
+  width: 100%; font: 800 1.05rem var(--font-body);
+  padding: .75rem 1rem; border-radius: .9rem;
+  border: 3px solid #5a3fc0; background: #1b0d52; color: var(--white);
+}
+.field input::placeholder { color: #9d8bdc; }
+.field input:focus, .field select:focus { border-color: var(--cyan); outline: none; box-shadow: 0 0 0 4px rgba(61,245,255,.25); }
+.field .hint  { display: block; font-size: .85rem; color: #cbbdff; margin-top: .25rem; }
+.field .error { display: block; font-size: .9rem; color: var(--pink); margin-top: .3rem; min-height: 1.2em; }
+.field.invalid input, .field.invalid select { border-color: var(--pink); }
+
+/* =====================================================
+   PAGE 3 ONLY: astronaut registration
+   ===================================================== */
+.reg { width: min(56rem, 100%); }
+.reg-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.4rem; align-items: stretch; margin-top: 1.2rem; }
+
+/* 3D-READY BOX: Member 2 puts the 3D model inside #astronaut-3d.
+   The emoji in .astro-fallback is shown until a 3D model loads. */
+#astronaut-3d {
+  min-height: 20rem; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: .8rem; position: relative;
+}
+.astro-fallback { font-size: clamp(6rem, 18vw, 9rem); line-height: 1; animation: float 3.2s ease-in-out infinite; --tx: 0; }
+.callsign-tag {
+  font: 400 1.5rem var(--font-display); color: var(--lemon);
+  background: rgba(0,0,0,.35); padding: .3rem 1.2rem; border-radius: 99px; min-width: 8rem;
+}
+.reg-form.panel { border-color: var(--pink); }
+
+@media (max-width: 720px) {
+  .reg-grid { grid-template-columns: 1fr; }
+  #astronaut-3d { min-height: 14rem; }
+}
+
+/* =====================================================
+   PAGE 3 UPDATE: commander avatar, suit colors, crew
+   ===================================================== */
+.avatar {
+  width: clamp(9rem, 26vw, 12.5rem); height: auto;
+  filter: drop-shadow(0 12px 10px rgba(0,0,0,.45));
+  animation: float 3.2s ease-in-out infinite;
+}
+.avatar .suit      { fill: var(--suit); }
+.avatar .suit-dark { fill: #6b2d12; fill: color-mix(in srgb, var(--suit) 60%, #000); }
+
+.swatches { display: flex; gap: .7rem; justify-content: center; }
+.swatch { position: relative; cursor: pointer; }
+.swatch input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.swatch span {
+  display: block; width: 2.6rem; height: 2.6rem; border-radius: 50%;
+  background: var(--c); border: 4px solid transparent; transition: transform .1s ease;
+}
+.swatch input:checked + span { border-color: var(--white); transform: scale(1.12); box-shadow: 0 0 0 3px rgba(0,0,0,.35); }
+.swatch input:focus-visible + span { outline: 4px solid var(--cyan); outline-offset: 3px; }
+
+.role-fixed {
+  display: flex; align-items: center; gap: .7rem; text-align: left;
+  background: rgba(255,225,77,.12); border: 3px solid var(--lemon);
+  border-radius: .9rem; padding: .6rem 1rem;
+}
+.role-fixed strong { font: 400 1.25rem var(--font-display); color: var(--lemon); display: block; line-height: 1.1; }
+.role-fixed small { color: #e6dcff; font-weight: 700; }
+.role-fixed .big { font-size: 1.8rem; }
+
+.crew { margin-top: 1.4rem; }
+.crew h2 { font: 400 1.3rem var(--font-display); margin: 0 0 .2rem; }
+.crew p  { margin: 0 0 .8rem; color: #cbbdff; font-size: .95rem; }
+.crew-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+.crew-card {
+  background: var(--space-2); border: 3px solid #5a3fc0; border-radius: 1rem;
+  padding: .7rem .4rem; display: flex; flex-direction: column; align-items: center; gap: .15rem;
+}
+.crew-card .face { font-size: 2rem; line-height: 1; }
+.crew-card b { font: 400 1.05rem var(--font-display); }
+.crew-card small { color: #cbbdff; font-size: .8rem; }
+@media (max-width: 480px) { .crew-row { grid-template-columns: 1fr; } .crew-card { flex-direction: row; justify-content: center; gap: .7rem; } }
+
+
+/* =====================================================
+   THEME V2: realistic / cinematic (overrides above)
+   Old variable names kept so every page still works.
+   ===================================================== */
+:root {
+  --space:   #02040a;  /* deep space */
+  --space-2: #0d1526;  /* panels */
+  --cyan:    #6ab4ff;  /* Earth-blue accent, info */
+  --pink:    #ffb066;  /* amber: warnings */
+  --lemon:   #f1ede4;  /* sunlight white: main action, highlights */
+  --mint:    #7ddba3;  /* ok / success */
+  --white:   #eef1f6;
+  --line:    rgba(160,190,235,.25);
+  --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+body { background: var(--space); font-weight: 500; }
+.lead { color: #b9c4d8; }
+
+.game-title, .h2 { text-transform: uppercase; font-weight: 800; letter-spacing: .01em; }
+.game-title { color: var(--white); text-shadow: 0 4px 40px rgba(0,0,0,.7); line-height: .88; font-size: clamp(3.6rem, 12vw, 8.5rem); }
+
+.btn { font: 600 1rem var(--font-body); letter-spacing: .04em; border-radius: .5rem; padding: .9rem 2.1rem; }
+.btn-play  { background: var(--lemon); color: #0a0f1c; border: 0; }
+.btn-play:hover { background: #fff; box-shadow: 0 0 36px rgba(170,205,255,.45); }
+.btn-ghost { background: rgba(255,255,255,.04); color: var(--white); border: 1px solid rgba(255,255,255,.35); font-size: 1rem; }
+.btn-ghost:hover { background: rgba(255,255,255,.12); }
+.btn:active { transform: translateY(1px); }
+.btn-play:active { border-bottom-width: 0; }
+.btn-ghost:active { border-bottom-width: 1px; }
+
+.panel { background: rgba(13,21,38,.82); border: 1px solid var(--line); border-radius: .9rem;
+         box-shadow: 0 24px 60px rgba(0,0,0,.5); backdrop-filter: blur(10px); }
+.reg-form.panel { border-color: var(--line); }
+.chip { border-width: 1px; background: rgba(255,255,255,.06); font-size: .85rem; }
+.field input, .field select { border: 1px solid rgba(160,190,235,.3); background: rgba(255,255,255,.05); }
+.field label { letter-spacing: .02em; }
+.role-fixed, .crew-card { border-width: 1px; }
+.level-bar { height: .28rem; }
+.level-fill { background: linear-gradient(90deg, var(--cyan), var(--lemon)); }
+dialog { border: 1px solid var(--line); background: #0d1526; }
+
+/* ---------- PAGE 1: cinematic start ---------- */
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: 0; transition: opacity 2s ease; }
+#scene.ready { opacity: 1; }
+.vignette { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(90deg, rgba(2,4,10,.82) 0%, rgba(2,4,10,.25) 50%, transparent 70%),
+              radial-gradient(ellipse at 65% 55%, transparent 45%, rgba(0,0,0,.6) 100%); }
+.page-start .screen { align-items: flex-start; text-align: left; padding-left: clamp(1.5rem, 7vw, 6rem); }
+.hero { max-width: 36rem; }
+.page-start .lead { margin: 1.2rem 0 2rem; max-width: 30rem; }
+.page-start .actions { justify-content: flex-start; }
+.readouts { display: flex; gap: 2.2rem; margin-top: 2.6rem; font-size: .9rem; color: #9aa7bf; }
+.readouts b { display: block; font: 700 1.35rem var(--font-display); color: var(--white); letter-spacing: .02em; }
+.page-start .level { margin: 1.6rem 0 0; width: min(16rem, 70vw); }
+@media (max-width: 700px) {
+  .vignette { background: linear-gradient(180deg, rgba(2,4,10,.85) 0%, rgba(2,4,10,.3) 55%, transparent 80%); }
+  .page-start .screen { justify-content: flex-start; padding-top: 3rem; }
+  .btn-play { width: 100%; text-align: center; }
+}
+
+/* ---------- Colourful buttons (V2.1) ---------- */
+.btn-play {
+  background: linear-gradient(135deg, #ffd166 0%, #ff8a3d 50%, #ff4d6d 100%);
+  color: #1a0b12; font-weight: 700;
+  box-shadow: 0 6px 24px rgba(255, 110, 80, .45), inset 0 1px 0 rgba(255,255,255,.45);
+}
+.btn-play:hover {
+  background: linear-gradient(135deg, #ffe08a 0%, #ff9c57 50%, #ff6683 100%);
+  box-shadow: 0 8px 34px rgba(255, 110, 80, .7), inset 0 1px 0 rgba(255,255,255,.55);
+}
+.btn-ghost {
+  color: #bfe0ff; background: rgba(106, 180, 255, .1);
+  border: 1px solid #6ab4ff; box-shadow: 0 0 18px rgba(106, 180, 255, .25);
+}
+.btn-ghost:hover { background: rgba(106, 180, 255, .22); box-shadow: 0 0 28px rgba(106, 180, 255, .5); color: #fff; }
+.btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+/* long title: keep it inside the left column */
+.page-start .game-title { font-size: clamp(3rem, 9.5vw, 6.8rem); }
+
+/* ---------- Fun + colourful (V2.2) ---------- */
+.game-title span { display: inline-block; -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: .06em; }
+.t-warm { background-image: linear-gradient(95deg, #ffe66d 0%, #ff9e3d 45%, #ff5d8f 100%); filter: drop-shadow(0 0 22px rgba(255,140,70,.45)); }
+.t-cool { background-image: linear-gradient(95deg, #5cf0ff 0%, #6ab4ff 40%, #b26bff 100%); filter: drop-shadow(0 0 22px rgba(120,150,255,.5)); }
+.chip { border-color: #6ab4ff; background: rgba(106,180,255,.12); }
+.chip-lemon { border-color: #ffd166; background: rgba(255,209,102,.12); }
+.chip-pink  { border-color: #ff6fa5; background: rgba(255,111,165,.12); }
+.chip-mint  { border-color: #5dffa6; background: rgba(93,255,166,.12); }
+
+.btn { position: relative; overflow: hidden; }
+.btn-play::after {                       /* shine sweep on hover */
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+  transform: skewX(-20deg); transition: left .6s ease;
+}
+.btn-play:hover::after { left: 120%; }
+.btn-play:hover { transform: translateY(-2px) scale(1.03); }
+.btn-ghost {
+  background: linear-gradient(135deg, rgba(92,240,255,.16), rgba(178,107,255,.2));
+  border: 1px solid transparent; color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(130,170,255,.8), 0 0 20px rgba(150,120,255,.3);
+}
+.btn-ghost:hover { background: linear-gradient(135deg, rgba(92,240,255,.3), rgba(178,107,255,.36)); transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .btn-play::after { display: none; } }
