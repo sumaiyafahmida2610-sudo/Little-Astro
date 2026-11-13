@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Little Astro’s Adventure | Moon Base</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Big+Shoulders+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-start">
+  <canvas id="scene" style="position:fixed;inset:0;width:100%;height:100%"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div id="fade" style="position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:5"></div>
+
+  <div style="position:fixed;left:50%;bottom:10%;transform:translateX(-50%);width:min(40rem,90%);text-align:center;z-index:2;pointer-events:none">
+    <p class="lead" id="story-line"></p>
+  </div>
+
+  <div id="dept-info" style="position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:3;display:none;text-align:center">
+    <span class="chip" id="dept-name"></span>
+    <div class="chip-row" style="margin-top:.5rem">
+      <span class="chip chip-mint">A = Good</span>
+      <span class="chip chip-pink">B = Low</span>
+      <span class="chip" style="color:#ff5d5d">C = Critical</span>
+    </div>
+  </div>
+
+  <button class="btn btn-ghost" id="back-btn" style="position:fixed;top:1rem;left:1rem;z-index:3;display:none">Back to base</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="base.js"></script>
+</body>
+</html>
