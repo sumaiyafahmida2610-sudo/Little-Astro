@@ -3,30 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="progress.js"></script>
   <title>Little Astro’s Adventure</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Big+Shoulders+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page-start">
 
   <canvas id="scene" aria-hidden="true"></canvas>
   <div class="vignette" aria-hidden="true"></div>
+  <i class="shoot s1"></i><i class="shoot s2"></i><i class="shoot s3"></i>
 
   <main class="screen" id="start-screen">
     <div class="hero">
+    <div id="hero-main">
       <h1 class="game-title"><span class="t-warm">Little Astro’s</span><br><span class="t-cool">Adventure</span></h1>
-      <p class="lead">Fly your spacecraft to the Moon and keep your crew alive. Oxygen runs low, power is limited, and Earth answers late.</p>
+      <p class="lead">Blast off to the Moon! Keep your crew safe: breathe, power up, and wait for Earth to reply.</p>
 
-      <div class="chip-row" style="justify-content:flex-start;margin:0 0 1.6rem">
-        <span class="chip">Oxygen</span><span class="chip chip-lemon">Power</span><span class="chip chip-pink">Signal delay</span>
+      <div class="chip-row" style="margin:0 0 1.6rem">
+        <span class="chip">💨 Oxygen</span><span class="chip chip-lemon">⚡ Power</span><span class="chip chip-pink">📡 Signal delay</span>
       </div>
 
       <div class="actions">
-        <a class="btn btn-play" href="briefing.html" id="start-btn">Start mission</a>
+        <a class="btn btn-play" href="briefing.html" id="start-btn">🚀 Start mission</a>
         <button class="btn btn-ghost" type="button" id="exit-btn">Exit</button>
       </div>
+
+      <p class="account-text">Already have an account?</p>
+      <button class="btn btn-ghost" type="button" id="login-open">Login</button>
+      <button class="btn btn-ghost" type="button" id="logout-btn" hidden>Log out</button>
 
       <div class="readouts">
         <div>Distance to Earth<b>384,400 km</b></div>
@@ -37,6 +44,29 @@
         Step 1 of 4
         <div class="level-bar"><div class="level-fill" style="--pct:25%"></div></div>
       </div>
+    </div>
+
+    <div id="login-view" hidden>
+      <h2 class="h2">Welcome back!</h2>
+      <p class="lead">Login to return to your mission.</p>
+
+      <form id="login-form" class="panel login-panel" novalidate>
+        <div class="field" id="f-user">
+          <label for="user">Username or email</label>
+          <input id="user" type="text" autocomplete="username" placeholder="Type here">
+          <span class="error" role="alert"></span>
+        </div>
+        <div class="field" id="f-pass">
+          <label for="pass">Password</label>
+          <input id="pass" type="password" autocomplete="current-password" placeholder="Type here">
+          <span class="error" role="alert"></span>
+        </div>
+        <div class="actions" style="margin-top:1.2rem;justify-content:space-between">
+          <button class="btn btn-ghost" type="button" id="login-back">Back</button>
+          <button class="btn btn-play" type="submit">Login</button>
+        </div>
+      </form>
+    </div>
     </div>
   </main>
 
@@ -59,6 +89,49 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="app.js"></script>
+  <script src="fx.js"></script>
   <script src="scene.js"></script>
+  <script>
+    (function () {
+      const main = document.getElementById("hero-main");
+      const view = document.getElementById("login-view");
+      const form = document.getElementById("login-form");
+
+      function show(login) {
+        main.hidden = login;
+        view.hidden = !login;
+        if (login) document.getElementById("user").focus();
+      }
+      document.getElementById("login-open").addEventListener("click", () => show(true));
+
+      // Only reachable with index.html?home (normal returning players skip this page): show Log out
+      if (AstroProgress.isLoggedIn()) {
+        document.querySelector(".account-text").hidden = true;
+        document.getElementById("login-open").hidden = true;
+        const out = document.getElementById("logout-btn");
+        out.hidden = false;
+        out.addEventListener("click", () => { AstroProgress.logout(); location.href = "index.html"; });
+      }
+      document.getElementById("login-back").addEventListener("click", () => show(false));
+
+      function check(id, msg) {
+        const field = document.getElementById("f-" + id);
+        const ok = document.getElementById(id).value.trim() !== "";
+        field.classList.toggle("invalid", !ok);
+        field.querySelector(".error").textContent = ok ? "" : msg;
+        return ok;
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const a = check("user", "Please enter your callsign or email.");
+        const b = check("pass", "Please enter your password.");
+        if (a && b) {                               // TODO: real login check later
+          AstroProgress.login(document.getElementById("user").value.trim());
+          AstroProgress.resume();                   // back to the page where the player stopped
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

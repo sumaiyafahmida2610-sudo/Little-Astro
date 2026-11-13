@@ -46,3 +46,9 @@ Headings: **Big Shoulders Display** (uppercase). Body: **Barlow**.
 ## Notes
 - `index.html` uses Three.js (`scene.js`) for the 3D Moon, Earth and spacecraft. Other pages use the simple starfield only.
 - Test every page on phone width and desktop width before pushing.
+
+## V3 update (fun, colourful, centered)
+- Add `<script src="fx.js"></script>` after `app.js` on every page. It gives sound effects (hover, click, pop), pop-in text, a warp page transition, and a mute button. Links between pages (`<a href>`) get the transition automatically.
+- Sound starts after the player's first click (browser rule). No audio files are needed.
+- Heading font is now **Fredoka** (friendly, rounded). Body stays Barlow.
+- Page 1 text is centered. Use `.game-title span` for colourful title lines (`.t-warm`, `.t-cool`).

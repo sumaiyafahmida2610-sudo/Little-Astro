@@ -3,14 +3,14 @@
   const canvas = document.getElementById("scene");
   if (!canvas || !window.THREE) return;            // page still works without 3D
   let renderer;
-  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); } catch (e) { return; }
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { return; }
 
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.15;
-  renderer.setClearColor(0x02040a);
+  renderer.setClearColor(0x000000, 0);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 600);
@@ -34,8 +34,8 @@
   const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
   /* ---------- Moon: grey highlands, dark maria, thousands of craters ---------- */
-  function moonTextures() {
-    const W = 2048, H = 1024, rnd = rng(11);
+  function moonTextures(W, H) {
+    const rnd = rng(11);
     const hgt = new Float32Array(W * H), alb = new Float32Array(W * H);
 
     for (let y = 0; y < H; y++) {
@@ -86,7 +86,7 @@
 
     // normal map from the height map
     const nc = document.createElement("canvas"); nc.width = W; nc.height = H;
-    const nctx = nc.getContext("2d"), nimg = nctx.createImageData(W, H), S = 45;
+    const nctx = nc.getContext("2d"), nimg = nctx.createImageData(W, H), S = 45 * W / 2048;
     for (let y = 0; y < H; y++) {
       const ym = Math.max(0, y - 1), yp = Math.min(H - 1, y + 1);
       for (let x = 0; x < W; x++) {
@@ -102,8 +102,7 @@
   }
 
   /* ---------- Earth: oceans, continents, ice caps, clouds ---------- */
-  function earthTextures() {
-    const W = 1024, H = 512;
+  function earthTextures(W, H) {
     const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"); return [c, x, x.createImageData(W, H)]; };
     const [c1, x1, i1] = mk(), [c2, x2, i2] = mk();
     for (let y = 0; y < H; y++) {
@@ -227,8 +226,8 @@
   function layout() {
     const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
-    if (w / h > 1.1) { moon.scale.setScalar(1); moon.position.set(5.8, -2.1, 0); earth.position.set(8, 7.2, -16); ship.userData.base.set(1.2, 1.5, 4.5); ship.scale.setScalar(0.62); }
-    else { moon.scale.setScalar(0.62); moon.position.set(0, -4.4, 0); earth.position.set(1.2, 3.4, -8); ship.userData.base.set(0.7, -0.6, 3.5); ship.scale.setScalar(0.42); }
+    if (w / h > 1.1) { moon.scale.setScalar(1.25); moon.position.set(0, -8.4, 0); earth.position.set(7.5, 3.8, -14); ship.userData.base.set(-5.2, 0.2, 3.2); ship.scale.setScalar(0.7); }
+    else { moon.scale.setScalar(0.75); moon.position.set(0, -5.3, 0); earth.position.set(2.2, 2.6, -8); ship.userData.base.set(1.4, -1.3, 3.2); ship.scale.setScalar(0.42); }
   }
   addEventListener("resize", layout); layout();
 
@@ -252,13 +251,18 @@
   }
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { clock.getDelta(); requestAnimationFrame(frame); } });
 
-  // Build textures after the page text is visible (takes about a second), then fade the scene in
-  setTimeout(() => {
-    const m = moonTextures(), e = earthTextures();
+  // Show stars + spacecraft instantly, then sharpen the Moon and Earth in two quick steps
+  moon.material.color.set(0x8a8a8a); ground.material.color.set(0x2a60a8); clouds.visible = false;
+  function applyTextures(mw, mh, ew, eh) {
+    const m = moonTextures(mw, mh), e = earthTextures(ew, eh);
+    [moon.material.map, moon.material.normalMap, ground.material.map, clouds.material.map].forEach((t) => t && t.dispose());
     moon.material.map = tex(m.map, true); moon.material.normalMap = tex(m.normal, false);
-    moon.material.normalScale = new THREE.Vector2(1.2, 1.2); moon.material.color.set(0xffffff); moon.material.needsUpdate = true;
-    ground.material.map = tex(e.map, true); ground.material.color.set(0xffffff); ground.material.needsUpdate = true;
-    clouds.material.map = tex(e.clouds, true); clouds.material.needsUpdate = true;
-    frame(); canvas.classList.add("ready");
-  }, 60);
+    moon.material.normalScale = new THREE.Vector2(1.2, 1.2); moon.material.color.set(0xffffff);
+    ground.material.map = tex(e.map, true); ground.material.color.set(0xffffff);
+    clouds.material.map = tex(e.clouds, true); clouds.visible = true;
+    [moon, ground, clouds].forEach((o) => { o.material.needsUpdate = true; });
+  }
+  frame(); canvas.classList.add("ready");
+  setTimeout(() => applyTextures(512, 256, 256, 128), 20);
+  setTimeout(() => applyTextures(2048, 1024, 1024, 512), 800);
 })();

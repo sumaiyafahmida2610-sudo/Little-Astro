@@ -301,3 +301,70 @@ dialog { border: 1px solid var(--line); background: #0d1526; }
 }
 .btn-ghost:hover { background: linear-gradient(135deg, rgba(92,240,255,.3), rgba(178,107,255,.36)); transform: translateY(-2px); }
 @media (prefers-reduced-motion: reduce) { .btn-play::after { display: none; } }
+
+/* =====================================================
+   V3: kid-friendly + colourful, centered, pop + warp
+   ===================================================== */
+:root { --font-display: "Fredoka", "Trebuchet MS", sans-serif; }
+
+body {
+  background:
+    radial-gradient(ellipse at 12% 18%, rgba(130, 70, 230, .5), transparent 52%),
+    radial-gradient(ellipse at 88% 28%, rgba(30, 160, 255, .38), transparent 55%),
+    radial-gradient(ellipse at 60% 95%, rgba(255, 90, 160, .3), transparent 55%),
+    #03050f;
+}
+.game-title, .h2 { text-transform: none; font-weight: 700; letter-spacing: 0; }
+.game-title { font-size: clamp(3rem, 11vw, 7.5rem); line-height: .95; }
+.btn { font: 600 1.15rem var(--font-display); border-radius: 999px; padding: 1rem 2.4rem; letter-spacing: .01em; }
+.chip { font: 500 .95rem var(--font-display); padding: .4rem 1rem; }
+.panel { border-radius: 1.2rem; }
+.lead { font-size: 1.15rem; }
+
+/* page 1 centered */
+#scene { transition: opacity 1s ease; }
+.vignette {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(2,4,10,.7) 0%, rgba(2,4,10,.32) 40%, transparent 68%),
+    radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(0,0,0,.55) 100%) !important;
+}
+.page-start .screen { align-items: center; text-align: center; padding: 1.5rem 1.2rem; }
+.page-start .hero { max-width: 64rem; display: flex; flex-direction: column; align-items: center; }
+.page-start .lead { margin: 1.1rem auto 1.4rem; max-width: 32rem; }
+.page-start .actions, .page-start .chip-row { justify-content: center; }
+.readouts { justify-content: center; text-align: center; }
+.page-start .level { margin: 1.4rem auto 0; }
+@media (max-width: 700px) { .page-start .screen { justify-content: flex-start; padding-top: 2.5rem; } .btn-play { width: auto; } }
+
+/* shooting stars */
+.shoot { position: fixed; z-index: 1; top: 0; left: 0; width: 8rem; height: 2px; pointer-events: none; opacity: 0;
+  background: linear-gradient(90deg, transparent, #fff); transform: rotate(35deg); animation: shoot 7s linear infinite; }
+.s1 { top: 8%;  left: 55%; animation-delay: 1s; }
+.s2 { top: 22%; left: 20%; animation-delay: 3.5s; }
+.s3 { top: 5%;  left: 80%; animation-delay: 5.5s; }
+@keyframes shoot { 0% { opacity: 0; translate: 0 0; } 3% { opacity: 1; } 12% { opacity: 0; translate: -260px 190px; } 100% { opacity: 0; translate: -260px 190px; } }
+
+/* pop-in text */
+.pop-in { animation: pop .65s cubic-bezier(.2, 1.5, .4, 1) backwards; }
+@keyframes pop { 0% { opacity: 0; transform: scale(.55) translateY(24px); } 100% { opacity: 1; transform: none; } }
+
+/* warp page transition */
+.warp {
+  position: fixed; inset: 0; z-index: 99; pointer-events: none;
+  background: radial-gradient(circle at 50% 60%, #ffd166 0%, #ff4d6d 38%, #5b2bd9 75%, #1a0b4d 100%);
+  clip-path: circle(0% at 50% 60%); transition: clip-path .5s ease-in-out;
+}
+.warp.go { clip-path: circle(150% at 50% 60%); }
+
+/* sound button */
+.sfx-toggle { position: fixed; top: .8rem; right: .8rem; z-index: 50; width: 2.6rem; height: 2.6rem; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.35); background: rgba(13,21,38,.7); color: #fff; font-size: 1.2rem; cursor: pointer; }
+.sfx-toggle:hover { background: rgba(106,180,255,.3); }
+@media (prefers-reduced-motion: reduce) { .shoot, .warp { display: none; } .pop-in { animation: none; } }
+
+
+/* ===== Login on start page ===== */
+[hidden] { display: none !important; }
+.account-text { margin: 1.6rem 0 .6rem; color: #cbbdff; font-size: .95rem; text-align: center; }
+.login-panel { width: min(26rem, 100%); margin: 1.2rem auto 0; text-align: left; }
+#hero-main, #login-view { width: 100%; text-align: center; }
