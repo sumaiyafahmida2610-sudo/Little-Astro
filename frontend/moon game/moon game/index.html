@@ -52,7 +52,7 @@
 
       <form id="login-form" class="panel login-panel" novalidate>
         <div class="field" id="f-user">
-          <label for="user">Username or email</label>
+         <label for="user">Name or email</label>
           <input id="user" type="text" autocomplete="username" placeholder="Type here">
           <span class="error" role="alert"></span>
         </div>
@@ -91,6 +91,7 @@
   <script src="app.js"></script>
   <script src="fx.js"></script>
   <script src="scene.js"></script>
+  <script src="auth.js"></script> 
   <script>
     (function () {
       const main = document.getElementById("hero-main");
@@ -122,14 +123,24 @@
         return ok;
       }
 
-      form.addEventListener("submit", (e) => {
+           form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const a = check("user", "Please enter your callsign or email.");
+        const a = check("user", "Please enter your name or email.");
         const b = check("pass", "Please enter your password.");
-        if (a && b) {                               // TODO: real login check later
-          AstroProgress.login(document.getElementById("user").value.trim());
-          AstroProgress.resume();                   // back to the page where the player stopped
+        if (!(a && b)) return;
+        const res = await AstroAuth.login(document.getElementById("user").value, document.getElementById("pass").value);
+        if (!res.ok) {
+          const bad = res.reason === "nouser" ? "user" : "pass";
+          const field = document.getElementById("f-" + bad);
+          field.classList.add("invalid");
+          field.querySelector(".error").textContent = res.reason === "nouser"
+            ? "No account found. Press Start mission to register." : "Wrong password. Try again.";
+          return;
         }
+       // if (window.AstroProgress && AstroProgress.login) AstroProgress.login(res.account.callsign);
+               try { localStorage.removeItem("mode"); localStorage.removeItem("astro_intro_done"); } catch (err) {}
+        try { sessionStorage.setItem("astroViaLogin", "1"); } catch (err) {}
+        location.href = "mode.html";               // skip briefing and registration            // skip briefing and registration
       });
     })();
   </script>

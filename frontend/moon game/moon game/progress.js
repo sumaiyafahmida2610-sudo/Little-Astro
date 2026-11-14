@@ -4,7 +4,7 @@
 
    >>> Set GAME_PAGE to your real game file name. */
 (function () {
-  var GAME_PAGE   = "game.html";
+  var GAME_PAGE   = "base.html";
   var INTRO_PAGES = ["", "index.html", "login.html", "briefing.html", "register.html", "mode.html"];
 
   var K_PAGE = "astro_last_page", K_USER = "astro_user", K_DONE = "astro_intro_done";
