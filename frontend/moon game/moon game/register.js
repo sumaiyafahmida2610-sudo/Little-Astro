@@ -151,7 +151,7 @@
       save();
       if (window.AstroAuth) await AstroAuth.register({ name: data.name, age: data.age, email: data.email, callsign: data.callsign, suit: data.suit }, data.pass);
       try { sessionStorage.removeItem("astroViaLogin"); } catch (e) {}
-      location.href = NEXT_PAGE; return;
+       location.replace(NEXT_PAGE); return;
     }
     if (!s.kind) {
       const inp = $("answer"), f = inp.closest(".field"), err = f.querySelector(".error");

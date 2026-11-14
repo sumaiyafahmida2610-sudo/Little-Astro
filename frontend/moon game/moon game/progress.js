@@ -20,8 +20,7 @@
     introDone:  function () { return get(K_DONE) === "1"; },
     // Player logged in => they already did the intro on their first visit.
     login:  function (name) { set(K_USER, name || "player"); set(K_DONE, "1"); },
-    logout: function () { del(K_USER); del(K_DONE); },
-    // Where to send a returning player: last game page they were on, else the game.
+    logout: function () { del(K_USER); del(K_DONE); del(K_PAGE); del("astronaut"); del("mode"); },
     resumeUrl: function () {
       var last = get(K_PAGE);
       return last && INTRO_PAGES.indexOf(last.split(/[?#]/)[0]) === -1 ? last : GAME_PAGE;

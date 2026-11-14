@@ -33,5 +33,5 @@
     hint.textContent = "Category " + m + " selected: " + TITLES[m] + ".";
   }
   cards.forEach(c => c.addEventListener("click", () => choose(c.dataset.mode)));
-  go.addEventListener("click", () => { if (!go.disabled) location.href = NEXT_PAGE; });
+   go.addEventListener("click", () => { if (!go.disabled) location.replace(NEXT_PAGE); });
 })();
