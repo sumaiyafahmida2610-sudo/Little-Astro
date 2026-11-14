@@ -91,6 +91,7 @@
   <script src="app.js"></script>
   <script src="fx.js"></script>
   <script src="scene.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="auth.js"></script> 
   <script>
     (function () {
@@ -138,9 +139,19 @@
           return;
         }
        // if (window.AstroProgress && AstroProgress.login) AstroProgress.login(res.account.callsign);
-               try { localStorage.removeItem("mode"); localStorage.removeItem("astro_intro_done"); } catch (err) {}
-        try { sessionStorage.setItem("astroViaLogin", "1"); } catch (err) {}
-       location.replace("mode.html");              // skip briefing and registration            // skip briefing and registration
+               if (window.AstroProgress && AstroProgress.login) {
+  AstroProgress.login(res.account.callsign);
+}
+
+try {
+  localStorage.removeItem("mode");
+} catch(err) {}
+
+try {
+  sessionStorage.setItem("astroViaLogin", "1");
+} catch(err) {}
+
+location.replace("mode.html");            // skip briefing and registration            // skip briefing and registration
       });
     })();
   </script>

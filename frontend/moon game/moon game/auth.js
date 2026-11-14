@@ -1,68 +1,111 @@
-// auth.js: tiny front-end account store shared by register.html and index.html (login).
-// Demo level only: passwords are salted + hashed, but everything lives in the browser (localStorage).
-// Real security needs a server.
+
+// auth.js - Supabase authentication for Little Astro
+
 (function () {
-  const KEY = "astroAccounts";
-  const norm = (s) => String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
-  const hex = (buf) => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  const SUPABASE_URL = "https://vipjpvqwumiphdyfqyra.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_3aI3RBKcB7nHUEujYwLvxQ_j-pRFnSz";
 
-  async function hash(salt, pw) {
-    const text = salt + ":" + pw;
-    if (window.crypto && crypto.subtle) return hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
-    let h = 5381; for (const c of text) h = ((h << 5) + h + c.charCodeAt(0)) >>> 0;   // weak fallback if crypto is unavailable
-    return "w" + h.toString(16);
-  }
-  function makeSalt() {
-    if (window.crypto && crypto.getRandomValues) return hex(crypto.getRandomValues(new Uint8Array(8)));
-    return Math.random().toString(16).slice(2, 18);
-  }
-  function load() {
-    try { const a = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; }
-  }
-  function store(list) { try { localStorage.setItem(KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
-
-  // account whose email OR registration name equals what the player typed
-  function find(id) { const n = norm(id); return n ? (load().find(a => norm(a.email) === n || norm(a.name) === n) || null) : null; }
-  function exists(email, callsign) {
-    const l = load();
-    return { email: !!norm(email) && l.some(a => norm(a.email) === norm(email)), callsign: !!norm(callsign) && l.some(a => norm(a.callsign) === norm(callsign)) };
+  if (!window.supabase) {
+    console.error("Supabase library was not loaded.");
+    return;
   }
 
-  // make this account the "current astronaut" that the other pages read
-  function setActive(a) {
-    try { localStorage.setItem("astronaut", JSON.stringify({ name: a.name, age: a.age, role: "Commander", callsign: a.callsign, suit: a.suit })); } catch (e) {}
+  const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  function norm(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  // Keep the astronaut information in the format
+  // already used by your game pages.
+  function setActive(user) {
+    const meta = user.user_metadata || {};
+
+    const astronaut = {
+      name: meta.name || "Astronaut",
+      age: meta.age || 0,
+      role: "Commander",
+      callsign: meta.callsign || "Pilot",
+      suit: meta.suit || "#ff8a3d"
+    };
+
+    localStorage.setItem("astronaut", JSON.stringify(astronaut));
+    return astronaut;
   }
 
   async function register(profile, password) {
-    const salt = makeSalt(), passHash = await hash(salt, password);
-    const list = load().filter(a => norm(a.email) !== norm(profile.email));   // only the EMAIL must be unique; names and callsigns may repeat
-    list.push({ name: profile.name, age: profile.age, email: norm(profile.email), callsign: profile.callsign, suit: profile.suit, salt, passHash });
-    return store(list);
+    const { data, error } = await db.auth.signUp({
+      email: norm(profile.email),
+      password: password,
+      options: {
+        data: {
+          name: profile.name,
+          age: Number(profile.age),
+          callsign: profile.callsign,
+          suit: profile.suit
+        }
+      }
+    });
+
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+
+    if (data.user) {
+      const account = setActive(data.user);
+
+      // Only mark as logged in if Supabase created a session.
+      if (data.session && window.AstroProgress) {
+        AstroProgress.login(account.callsign);
+      }
+
+      return {
+        ok: true,
+        account: account,
+        needsEmailConfirmation: !data.session
+      };
+    }
+
+    return { ok: false, error: "Registration could not be completed." };
   }
 
-  // TEMPORARY (no database yet): while OPEN_LOGIN is true, ANY username/email and password is accepted.
-  // Set it to false later to require a registered account with the right password.
-  const OPEN_LOGIN = false;
+  async function login(email, password) {
+    const { data, error } = await db.auth.signInWithPassword({
+      email: norm(email),
+      password: password
+    });
 
-  // returns {ok:true, account} or {ok:false, reason:"nouser"|"badpass"}
-  async function login(id, password) {
-    const acc = find(id);
-    if (OPEN_LOGIN) {
-      if (acc) { setActive(acc); return { ok: true, account: acc }; }     // known player: load their saved profile
-      const raw = String(id || "").trim(), base = raw.includes("@") ? raw.split("@")[0] : raw;
-      const callsign = base.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 12) || "Pilot";
-      const guest = { name: callsign.charAt(0).toUpperCase() + callsign.slice(1), age: 0, email: raw.includes("@") ? norm(raw) : "", callsign, suit: "#ff8a3d" };
-      setActive(guest);
-      return { ok: true, account: guest };
+    if (error) {
+      return {
+        ok: false,
+        reason: "invalid",
+        error: error.message
+      };
     }
-    // several players may share a name, so try every account with that name/email and keep the one whose password matches
-    const n = norm(id), matches = n ? load().filter(x => norm(x.email) === n || norm(x.name) === n) : [];
-    if (!matches.length) return { ok: false, reason: "nouser" };
-    for (const m of matches) {
-      if (await hash(m.salt, password) === m.passHash) { setActive(m); return { ok: true, account: m }; }
+
+    const account = setActive(data.user);
+
+    if (window.AstroProgress) {
+      AstroProgress.login(account.callsign);
     }
-    return { ok: false, reason: "badpass" };
+
+    return { ok: true, account: account };
   }
 
-  window.AstroAuth = { register, login, find, exists, setActive };
+  // Duplicate checks are handled by Supabase during registration.
+  // Keep this method temporarily for compatibility with register.js.
+  function exists() {
+    return { email: false, callsign: false };
+  }
+
+  window.AstroAuth = {
+    register,
+    login,
+    setActive,
+    exists,
+    db
+  };
 })();

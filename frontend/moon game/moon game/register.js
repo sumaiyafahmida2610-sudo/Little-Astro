@@ -148,11 +148,47 @@
   async function go() {
     const s = STEPS[step];
     if (s.kind === "review") {
-      save();
-      if (window.AstroAuth) await AstroAuth.register({ name: data.name, age: data.age, email: data.email, callsign: data.callsign, suit: data.suit }, data.pass);
-      try { sessionStorage.removeItem("astroViaLogin"); } catch (e) {}
-       location.replace(NEXT_PAGE); return;
+  save();
+
+  if (!window.AstroAuth) {
+    say("Registration system is not ready. Please refresh the page.");
+    return;
+  }
+
+  try {
+    const result = await AstroAuth.register(
+      {
+        name: data.name,
+        age: data.age,
+        email: data.email,
+        callsign: data.callsign,
+        suit: data.suit
+      },
+      data.pass
+    );
+
+    if (!result.ok) {
+      say("Registration failed: " + result.error);
+      return;
     }
+
+    try {
+      sessionStorage.removeItem("astroViaLogin");
+    } catch (e) {}
+
+    if (result.needsEmailConfirmation) {
+      say("Your account is created! Please check your email to confirm it.");
+    }
+
+    location.href = NEXT_PAGE;
+    return;
+
+  } catch (error) {
+    say("Something went wrong. Please try again.");
+    console.error(error);
+    return;
+  }
+}
     if (!s.kind) {
       const inp = $("answer"), f = inp.closest(".field"), err = f.querySelector(".error");
       const v = s.type === "password" ? inp.value : inp.value.trim().replace(/\s+/g, " "), msg = s.validate(v);
