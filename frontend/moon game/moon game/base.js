@@ -2064,7 +2064,7 @@ function buildDeptConsole(g, d) {
     }
     updateEvents(t);
     updateLifeEvents(t);
-        updateStatus(t);
+      updateStatus(t); 
     aim(t);
     renderer.render(scene, camera);
         updateArrows();
