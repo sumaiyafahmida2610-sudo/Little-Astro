@@ -345,6 +345,12 @@
       { name: 'Recycler', short: 'Recycler capacity', pct: 14, tip: 'recycler is almost full, service it now!' }
     ] }
 ];
+  // Category A = Core Survival: water stays, but there is no food production (no greenhouse plants, no food stock)
+  const GAME_MODE = (() => { try { return localStorage.getItem('mode') === 'B' ? 'B' : 'A'; } catch (e) { return 'A'; } })();
+  if (GAME_MODE === 'A') {
+    const sd = DEPTS.find(d => d.id === 'supply');
+    if (sd) { sd.name = 'Water Supply'; sd.items[1] = ['Water Filters', 'B', 'crate']; sd.res[1] = { name: 'Water Filters', short: 'Filter stock', pct: 60, tip: 'order more filters soon.' }; }
+  }
   const [sc, sx2] = cv(256, 256);
   sx2.fillStyle = '#0c1d44'; sx2.fillRect(0, 0, 256, 256); sx2.strokeStyle = '#6f8fd0'; sx2.lineWidth = 2;
   for (let i = 0; i <= 8; i++) { sx2.beginPath(); sx2.moveTo(i * 32, 0); sx2.lineTo(i * 32, 256); sx2.moveTo(0, i * 32); sx2.lineTo(256, i * 32); sx2.stroke(); }
@@ -471,14 +477,14 @@
       const wf = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(R + .04, 2)), new THREE.LineBasicMaterial({ color: 0xe9fff2, clippingPlanes: frameClip })); wf.position.y = 1; g.add(wf);
       // inside: soil beds + plants
       const list = [];
-      [-4.4, -.6, 3.2].forEach(z => {
+      (GAME_MODE === 'A' ? [] : [-4.4, -.6, 3.2]).forEach(z => {
         box(g, 11, .7, 2, mat(0x3b2f24, { roughness: 1, metalness: 0 }), 0, 1.35, z); box(g, 11.2, .22, 2.2, white, 0, 1.55, z);
         for (let i = 0; i < 34; i++) list.push({ x: rnd(-5.2, 5.2), y: 1.85 + rnd(0, .3), z: z + rnd(-.8, .8), s: rnd(.28, .55) });
       });
       const im = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), mat(0xffffff, { roughness: .8, metalness: 0, flatShading: true, envMapIntensity: .3 }), list.length);
       const o = new THREE.Object3D(), col = new THREE.Color();
       list.forEach((p, i) => { o.position.set(p.x, p.y, p.z); o.scale.set(p.s, p.s * .8, p.s); o.rotation.y = rnd(0, 6); o.updateMatrix(); im.setMatrixAt(i, o.matrix); col.setHSL(rnd(.22, .36), rnd(.55, .8), rnd(.28, .45)); im.setColorAt(i, col); });
-      g.add(im);
+      if (list.length) g.add(im);
       [[-3.4, 5.6, Math.PI], [3.4, -6.4, 0]].forEach(([x, z, ry]) => { const a = makeAstronaut(.62); a.position.set(x, 1, z); a.rotation.y = ry; g.add(a); });
       for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283, l = glowSprite(0xe9ffd8, 2.4, .8); l.position.set(Math.cos(a) * 4.2, 6.2, Math.sin(a) * 4.2); g.add(l); }
       // tunnel + door
@@ -677,18 +683,25 @@
   // =====================================================
   const lvOf = p => p >= 70 ? 'A' : p >= 30 ? 'B' : 'C';
   const LTXT = { A: 'GOOD', B: 'LOW', C: 'CRITICAL' };
+  const liveTex = [], liveRead = [];   // screens that must follow the real battery
 
   function readout(name, pct, unit) {   // floating holo-board showing the amount left
-    const lv = lvOf(pct), col = LEVEL[lv], [c, x] = cv(512, 288);
-    x.fillStyle = 'rgba(6,14,26,.92)'; x.fillRect(0, 0, 512, 288);
-    x.strokeStyle = col; x.lineWidth = 8; x.strokeRect(4, 4, 504, 280);
-    x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillStyle = '#eef1f6'; x.font = '700 38px Barlow, sans-serif'; x.fillText(name.toUpperCase(), 256, 44);
-    x.fillStyle = col; x.font = '700 104px Barlow, sans-serif'; x.fillText(pct + '%', 256, 124);
-    x.fillStyle = 'rgba(255,255,255,.14)'; x.fillRect(40, 182, 432, 30);
-    x.fillStyle = col; x.fillRect(40, 182, 432 * pct / 100, 30);
-    x.fillStyle = '#eef1f6'; x.font = '600 28px Barlow, sans-serif'; x.fillText(unit + '  ·  ' + LTXT[lv], 256, 245);
+    const [c, x] = cv(512, 288);
+    const paint = (p) => {
+      const lv = lvOf(p), col = LEVEL[lv];
+      x.clearRect(0, 0, 512, 288);
+      x.fillStyle = 'rgba(6,14,26,.92)'; x.fillRect(0, 0, 512, 288);
+      x.strokeStyle = col; x.lineWidth = 8; x.strokeRect(4, 4, 504, 280);
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillStyle = '#eef1f6'; x.font = '700 38px Barlow, sans-serif'; x.fillText(name.toUpperCase(), 256, 44);
+      x.fillStyle = col; x.font = '700 104px Barlow, sans-serif'; x.fillText(p + '%', 256, 124);
+      x.fillStyle = 'rgba(255,255,255,.14)'; x.fillRect(40, 182, 432, 30);
+      x.fillStyle = col; x.fillRect(40, 182, 432 * p / 100, 30);
+      x.fillStyle = '#eef1f6'; x.font = '600 28px Barlow, sans-serif'; x.fillText(unit + '  ·  ' + LTXT[lv], 256, 245);
+    };
+    paint(pct);
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(c), transparent: true, toneMapped: false }));
+    s.userData.repaint = (p) => { paint(p); s.material.map.needsUpdate = true; };
     s.scale.set(4.6, 2.6, 1); return s;
   }
 
@@ -701,6 +714,8 @@
 
   function consoleScreenTex(res, name) {
     const [c, x] = cv(512, 256);
+    const paint = () => {
+    x.clearRect(0, 0, 512, 256);
     x.fillStyle = '#03121a'; x.fillRect(0, 0, 512, 256); x.strokeStyle = '#4ff0c8'; x.lineWidth = 4; x.strokeRect(3, 3, 506, 250);
     x.fillStyle = '#4ff0c8'; x.font = '700 24px Barlow, sans-serif'; x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText(name.toUpperCase() + ' · ALL SYSTEMS', 18, 28);
     res.forEach((r, i) => {
@@ -711,7 +726,11 @@
       x.font = '700 24px Barlow, sans-serif'; x.textAlign = 'right'; x.fillText(r.pct + '%', 494, y);
     });
     x.fillStyle = '#4ff0c8'; x.font = '700 21px Barlow, sans-serif'; x.textAlign = 'center'; x.fillText('▶ CLICK TO OPEN FULL VIEW', 256, 232);
-    return tex(c);
+    };
+    paint(); const t = tex(c);
+    t.repaint = () => { paint(); t.needsUpdate = true; };
+    liveTex.push(t); if (liveTex.length > 12) liveTex.shift();
+    return t;
   }
 
   function buildO2(pct) {
@@ -856,7 +875,7 @@
     put(buildCO2(co2.pct), 0, -7.6, 0, .85);
     put(buildBattery(bat.pct), 11.5, -6.4, -.25, 1);
     [[o2, -11, 8.8, -6.8], [co2, 0, 8.6, -7.6], [bat, 11.5, 7.8, -6.4]].forEach(([r, x, y, z]) => {
-      const s = readout(r.name, r.pct, r.short); s.position.set(x, y, z); g.add(s); if (lvOf(r.pct) === 'C') blinkers.push(s);
+      const s = readout(r.name, r.pct, r.short); s.userData.res = r; liveRead.push(s); if (liveRead.length > 9) liveRead.shift(); s.position.set(x, y, z); g.add(s); if (lvOf(r.pct) === 'C') blinkers.push(s);
       const lt = new THREE.PointLight(LEVEL[lvOf(r.pct)], .9, 14); lt.position.set(x, 3, z + 3); g.add(lt);
     });
     const con = buildConsole(d);
@@ -886,7 +905,7 @@ function buildLifeStations(g, d) {
   put(buildCO2(co2.pct), -3.5, -7.6, 0, .75);
   put(buildBattery(bat.pct), 4.5, -6.4, -.2, .85);
   [[o2, -12.5, 7.4, -6.8], [co2, -3.5, 7.2, -7.6], [bat, 4.5, 7.0, -6.4]].forEach(([r, x, y, z]) => {
-    const s = readout(r.name, r.pct, r.short); s.position.set(x, y, z); g.add(s); if (lvOf(r.pct) === 'C') blinkers.push(s);
+    const s = readout(r.name, r.pct, r.short); s.userData.res = r; liveRead.push(s); if (liveRead.length > 9) liveRead.shift(); s.position.set(x, y, z); g.add(s); if (lvOf(r.pct) === 'C') blinkers.push(s);
     const lt = new THREE.PointLight(LEVEL[lvOf(r.pct)], .9, 14); lt.position.set(x, 3, z + 3); g.add(lt);
   });
   // control console alone on the right side
@@ -1025,12 +1044,14 @@ function buildDeptConsole(g, d) {
         add(new THREE.Mesh(new THREE.BoxGeometry(w, .8, dp), soil), x, .4, z); add(new THREE.Mesh(new THREE.BoxGeometry(w + .25, .25, dp + .25), Wt), x, .85, z);
         for (let i = 0; i < n; i++) list.push({ x: x + rnd(-w / 2 + .3, w / 2 - .3), y: 1.1 + rnd(0, .35), z: z + rnd(-dp / 2 + .3, dp / 2 - .3), s: rnd(.3, .65) });
       };
-      [-1, 1].forEach(s => [-7.5, -1.8, 4].forEach(z => bed(s * 14.4, z, 3.2, 4.8, 32)));
-      [-11, 0, 11].forEach(x => bed(x, -10.8, 9, 2.2, 36));
+      if (GAME_MODE !== 'A') {   // no plant beds in Category A
+        [-1, 1].forEach(s => [-7.5, -1.8, 4].forEach(z => bed(s * 14.4, z, 3.2, 4.8, 32)));
+        [-11, 0, 11].forEach(x => bed(x, -10.8, 9, 2.2, 36));
+      }
       const im = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), mat(0xffffff, { roughness: .8, metalness: 0, flatShading: true, envMapIntensity: .3 }), list.length);
       const o = new THREE.Object3D(), col = new THREE.Color();
       list.forEach((p, i) => { o.position.set(p.x, p.y, p.z); o.scale.set(p.s, p.s * .85, p.s); o.rotation.y = rnd(0, 6); o.updateMatrix(); im.setMatrixAt(i, o.matrix); col.setHSL(rnd(.22, .37), rnd(.55, .85), rnd(.28, .46)); im.setColorAt(i, col); });
-      im.castShadow = true; g.add(im);
+      if (list.length) { im.castShadow = true; g.add(im); }
       [-1, 1].forEach(s => {
         g.add(pipe([[s * 16.5, .5, -9], [s * 16.5, 3.2, -9], [s * 16.5, 3.2, 9]], .13, Wt));
         g.add(pipe([[s * 16.4, 3.2, -9], [s * 16.4, 3.2, 9]], .06, glow(0x7fd8ff, 1.2)));
@@ -1084,6 +1105,7 @@ function buildDeptConsole(g, d) {
   }
 
   function enter(d) {
+    if (d.id === 'shelter') return enterShelter(d);
     busy = true; line.textContent = '';
     const p = d.group.position;
     gsap.timeline()
@@ -1091,7 +1113,7 @@ function buildDeptConsole(g, d) {
       .to(look, { x: p.x, y: 2.8, z: p.z, duration: 2.4, ease: 'power2.inOut' }, 0)
       .to(fade, { opacity: 1, duration: .6 })
       .add(() => {
-        world.visible = false; interior = buildInterior(d); scene.add(interior); scene.environment = envIn;
+        world.visible = false; interior = buildInterior(d); radAddInterior(d, interior); scene.add(interior); scene.environment = envIn;
         camIn = d.cam || { pos: [0, 4.2, 9.5], look: [0, 3.4, -6] };
         camera.position.set(camIn.pos[0], camIn.pos[1], camIn.pos[2]); look.set(camIn.look[0], camIn.look[1], camIn.look[2]);
         line.textContent = d.res ? 'Click the glowing control panel to see every system.' : '';
@@ -1245,6 +1267,13 @@ function buildDeptConsole(g, d) {
      cold: { title: 'HABITAT TOO COLD', msg: 'The lunar habitat is getting too cold. The crew is shivering.', goal: 'Find the Life Support base!', lesson: 'Keeping astronauts warm is important, but heating must be balanced against other essential systems.' },
 
 
+    o2: { title: 'OXYGEN GENERATOR FAULT', msg: 'The oxygen generator shut down. Oxygen in the cabin is slowly falling.', goal: 'Find the Life Support base!', lesson: 'When a life-support machine fails, switch to a backup supply first. Repair the machine afterwards.' },
+    power: { title: 'POWER LINE FAULT', msg: 'A power line failed and the base is losing electricity.', goal: 'Find the Life Support base!', lesson: 'When power is short, backup power goes to the systems that keep the crew alive first.' },
+
+    water: { title: 'WATER RECYCLER FAILURE', msg: 'A pipe in the water recycler burst. Precious water is leaking away.', goal: 'Find the Life Support base!', lesson: 'Water is very hard to bring to the Moon, so every drop is recycled. Stop the loss first, then repair.' },
+    solar: { title: 'SOLAR PANEL DAMAGE', msg: 'A moon rock chipped a solar panel. The base makes less electricity, so the battery drains faster.', goal: 'Find the Life Support base!', lesson: 'When power generation drops, switch to backup power for essential systems while the panel is repaired.' },
+    comm: { title: 'COMMUNICATION DISRUPTION', msg: 'The antenna lost its signal. Mission Control cannot hear the base and cannot send tips.', goal: 'Find the Life Support base!', lesson: 'Without a radio link the crew must solve problems on their own, so know your emergency steps.' },
+
     flare: {
       title: 'SOLAR FLARE ALERT',
       msg: 'A strong solar flare is causing radio interference. The crew cannot send a normal message to Earth.',
@@ -1390,7 +1419,7 @@ function buildDeptConsole(g, d) {
   function endEvent() {
     flareActive = false; flareId = null; evPanel.style.display = 'none';
     commsD.ringMat.color.set(commsD.color);
-    evTimer = 30; state = 'inside'; line.textContent = '';
+    pw.handled++; evTimer = nextEvDelay(); state = 'inside'; line.textContent = '';
   }
   /*addEventListener('keydown', e => { if (e.key && e.key.toLowerCase() === 'f' && state === 'base' && !busy && !flareActive) triggerEvent('flare'); }); */  // test shortcut
 
@@ -1437,8 +1466,9 @@ function buildDeptConsole(g, d) {
   // =====================================================================
   let lifeEv = null, reserveObjs = null, hoverRes = null, hintUntil = 0, lastEv = null, sayTimer = null, lifeLast = 0;
   const lifeD = DEPTS.find(d => d.id === 'life');
-    const MODE = (() => { try { return localStorage.getItem('mode') || 'A'; } catch (e) { return 'A'; } })();
-  const EVENT_POOL = MODE === 'B' ? ['flare', 'co2', 'leak', 'cold'] : ['co2', 'leak', 'cold'];
+    const MODE = GAME_MODE;
+  const EVENT_POOL = MODE === 'B' ? ['flare', 'radiation', 'co2', 'leak', 'cold', 'o2', 'power', 'water', 'solar', 'comm']
+                                  : ['co2', 'leak', 'cold', 'o2', 'power', 'water', 'solar', 'comm'];   // radiation + flare are Category B only
 
   const RES = {
     o2: { name: 'Oxygen reserve tank', info: 'Spare breathing oxygen for the crew.' },
@@ -1450,6 +1480,117 @@ function buildDeptConsole(g, d) {
   };
 
   const LIFE_EV = {
+    water: {
+      story: 'The water recycler has burst a pipe! Water drips onto the floor and the tank level is slowly falling.',
+      gauges: () => [['Water tank', 'Falling ▼', 55, '#ffb066'], ['Daily need', '12 L', 100, '#7ddba3']],
+      q: 'WHAT SHOULD THE CREW DO FIRST?',
+      opts: [
+        { id: 'A', t: 'Close off the broken pipe, then repair the recycler', s: 'Stop the loss before anything else.', good: true },
+        { id: 'B', t: 'Drink extra water now before it is gone', s: 'Use it while we still have it.', good: false,
+          out: 'The tank keeps emptying while the crew drinks. Stop the loss first!' }
+      ],
+      tips: [
+        'Water on the Moon is recycled again and again, so a leak wastes a lot.',
+        'Stop the water from escaping before you repair anything.',
+        'Look for the part that closes off a damaged pipe.'
+      ],
+      steps: [{
+        ok: ['valve'],
+        goal: 'Find the part that closes off the broken section.',
+        hint: 'Look for the reserve labelled Leak isolation valve.',
+        done: { valve: 'The broken pipe is closed off. The water stops leaking.' },
+        wrong: { o2: 'Oxygen does not stop a water leak.', n2: 'Nitrogen gas does not stop a water leak.', bat: 'A battery gives power. It cannot close a pipe.', lioh: 'These clean CO₂. They do not stop a leak.', heat: 'A heater does not stop a leak.' }
+      }],
+      win: 'The leak is isolated and the recycler can now be repaired safely.'
+    },
+    solar: {
+      story: 'A moon rock chipped a solar panel! The base is making less electricity, so the battery drains faster until this is fixed.',
+      gauges: () => { const b = lifeD.res[2].pct; return [['Battery power', b + '%', b, LEVEL[lvOf(b)]], ['Solar output', 'Low ▼', 35, '#ffb066']]; },
+      q: 'WHAT SHOULD THE CREW DO?',
+      opts: [
+        { id: 'A', t: 'Connect the spare battery and protect life support while the panel is repaired', s: 'Backup power for the most important systems.', good: true },
+        { id: 'B', t: 'Ignore it. The battery will be fine', s: 'No action needed.', good: false,
+          out: 'The battery keeps draining faster than normal. Ignoring a power problem is risky!' }
+      ],
+      tips: [
+        'Less sunlight on the panels means less electricity for the base.',
+        'Which supply can add electricity quickly?',
+        'Protect the systems that keep the crew alive first.'
+      ],
+      steps: [{
+        ok: ['bat'],
+        goal: 'Find a reserve that adds electricity to the base.',
+        hint: 'Look for the reserve labelled Spare battery pack.',
+        done: { bat: 'The spare battery is connected. The base has power while the panel is repaired.' },
+        wrong: { o2: 'Oxygen is for breathing. It does not make electricity.', n2: 'Nitrogen does not make electricity.', lioh: 'These clean CO₂. They do not make electricity.', heat: 'A heater uses electricity. It does not make any.', valve: 'A valve closes a leak. It does not make electricity.' }
+      }],
+      win: 'The spare battery covers the missing solar power until the panel is repaired.'
+    },
+    comm: {
+      story: 'The antenna lost its signal. Mission Control cannot hear the base, so no tips or hints can arrive until it is restarted.',
+      gauges: () => [['Radio link', 'Lost ▼', 10, '#ff5d5d'], ['Antenna power', 'Needs reboot', 45, '#ffb066']],
+      q: 'WHAT SHOULD THE CREW DO?',
+      opts: [
+        { id: 'A', t: 'Restart the antenna on spare power', s: 'A clean reboot restores the link.', good: true },
+        { id: 'B', t: 'Keep calling on the radio until someone answers', s: 'Maybe they will hear us.', good: false,
+          out: 'Nothing gets through. The antenna must be restarted first.' }
+      ],
+      tips: [],
+      steps: [{
+        ok: ['bat'],
+        goal: 'Find a reserve that gives the antenna clean power.',
+        hint: 'Look for the reserve labelled Spare battery pack.',
+        done: { bat: 'The antenna restarts on spare power. The link to Earth is back.' },
+        wrong: { o2: 'Oxygen is for breathing. The antenna needs electricity.', n2: 'Nitrogen does not power an antenna.', lioh: 'These clean CO₂. They do not power an antenna.', heat: 'A heater does not restore a radio link.', valve: 'A valve closes a leak. It does not power an antenna.' }
+      }],
+      win: 'The link to Mission Control is back. Help from Earth is available again.'
+    },
+    o2: {
+      story: 'The oxygen generator has switched itself off. The air still smells fine, but the oxygen level in the cabin is slowly falling.',
+      gauges: () => [['Cabin oxygen', 'Falling ▼', 55, '#ffb066'], ['Safe range', '19–23 %', 100, '#7ddba3']],
+      q: 'WHAT SHOULD THE CREW DO FIRST?',
+      opts: [
+        { id: 'A', t: 'Switch to the spare oxygen supply', s: 'Keeps the air breathable while the generator is checked.', good: true },
+        { id: 'B', t: 'Wait and see if the generator restarts by itself', s: 'Saves effort and power.', good: false,
+          out: 'The generator stays off. Oxygen keeps falling and the crew starts to feel dizzy. Waiting is not a plan!' }
+      ],
+      tips: [
+        'Astronauts use oxygen all the time. The cabin has a limited amount of it.',
+        'A backup supply buys time. Fixing the broken machine comes second.',
+        'Look for the reserve that holds oxygen to breathe.'
+      ],
+      steps: [{
+        ok: ['o2'],
+        goal: 'Find the spare oxygen tank and open it.',
+        hint: 'Look for the reserve labelled Oxygen reserve tank.',
+        done: { o2: 'The spare oxygen flows into the cabin. The oxygen level stops falling.' },
+        wrong: { n2: 'Nitrogen keeps air pressure up, but the crew cannot breathe it alone.', bat: 'A battery gives power. It does not make breathable oxygen.', lioh: 'These clean CO₂. They do not add oxygen.', heat: 'A heater does not add oxygen.', valve: 'A valve closes off a leak. There is no leak here.' }
+      }],
+      win: 'The spare oxygen keeps the crew breathing while the generator is repaired.'
+    },
+    power: {
+      story: 'A power line has failed. The base is losing electricity, and life support needs power to keep the crew safe.',
+      gauges: () => { const b = lifeD.res[2].pct; return [['Battery power', b + '%', b, LEVEL[lvOf(b)]], ['Power line', 'Faulty ▼', 30, '#ffb066']]; },
+      q: 'HOW SHOULD THE POWER BE USED?',
+      opts: [
+        { id: 'A', t: 'Connect the spare battery and feed life support first', s: 'Extra communication and equipment can wait.', good: true },
+        { id: 'B', t: 'Keep every system on full power and hope the fault clears', s: 'Nothing is switched off.', good: false,
+          out: 'The faulty line keeps wasting electricity. The battery drops even faster and nothing is protected.' }
+      ],
+      tips: [
+        'When power is short, the crew decides which systems stay on.',
+        'Which systems keep people alive right now, and which can wait?',
+        'Look for a reserve that adds electricity.'
+      ],
+      steps: [{
+        ok: ['bat'],
+        goal: 'Find a reserve that adds electricity to the base.',
+        hint: 'It is the yellow spare battery box.',
+        done: { bat: 'The spare battery is connected. Life support has power again.' },
+        wrong: { o2: 'Oxygen is for breathing. It does not make electricity.', n2: 'Nitrogen refills air pressure. It does not make electricity.', lioh: 'These clean CO₂. They do not make electricity.', heat: 'A heater uses electricity. It does not make any.', valve: 'A valve closes off a leak. It does not make electricity.' }
+      }],
+      win: 'Life support is running on the spare battery. The crew can breathe and stay warm.'
+    },
     co2: {
       story: 'The base has very little battery power left. The CO₂ filter needs electricity to clean the air, and the CO₂ level is starting to rise. The crew must decide where the remaining power goes.',
       gauges: () => { const b = lifeD.res[2].pct; return [['Battery power', b + '%', b, LEVEL[lvOf(b)]], ['CO₂ in cabin', 'Rising ▲', 64, '#ffb066']]; },
@@ -1641,7 +1782,7 @@ function buildDeptConsole(g, d) {
     }
     o.userData.solved = true; beep(660, .12, 0); beep(990, .2, .14);
     lvSay('✔ <b>' + R.name + '</b><br>' + (S.done[k] || ''), 'good');
-    if (lifeEv.id === 'co2' && k === 'bat') pw.level = Math.min(100, pw.level + 35);
+    if (k === 'bat' && BAT_GAIN[lifeEv.id]) pw.level = Math.min(100, pw.level + BAT_GAIN[lifeEv.id]);
     lifeEv.step++;
     if (lifeEv.step < LIFE_EV[lifeEv.id].steps.length) { showHud(); }
     else {
@@ -1660,8 +1801,8 @@ function buildDeptConsole(g, d) {
     const E = EVENTS[lifeEv.id], C = LIFE_EV[lifeEv.id];
     const gauges = C.gauges().map(([n, v, p, c]) => `<div class="evp-m"><span>${n}</span><div class="evp-bar"><i style="width:${p}%;background:${c}"></i></div><em style="color:${c}">${v}</em></div>`).join('');
     const opts = C.opts.map(o => { const x = lifeEv.tried.indexOf(o.id) >= 0; return `<button class="evp-prio${lifeEv.sel === o.id ? ' on' : ''}${x ? ' lv-x' : ''}" data-act="opt-${o.id}"${x ? ' disabled' : ''}><b>${o.id}</b>${o.t}<small>${o.s}</small></button>`; }).join('');
-    const tips = C.tips.slice(0, lifeEv.tipN).map(t => `<p>💡 ${t}</p>`).join('');
-    const more = lifeEv.tipN < C.tips.length ? '<button class="lv-ask" data-act="tip">💡 Ask Mission Control for another tip</button>' : '';
+    const tips = (noLink() ? [] : C.tips.slice(0, lifeEv.tipN)).map(t => `<p>💡 ${t}</p>`).join('');
+    const more = noLink() ? '<p class="evp-note">📡 There is no link to Mission Control right now (Communication is in battery saving mode, or the antenna is down), so no tips can arrive.</p>' : lifeEv.tipN < C.tips.length ? '<button class="lv-ask" data-act="tip">💡 Ask Mission Control for another tip</button>' : '';
     return `<div class="evp-card">${lifeHead('⚠ ' + E.title, '<button class="evp-x" data-act="lconsole">📊 Control panel</button>')}
       <p class="evp-txt">${C.story}</p><div class="lv-g">${gauges}</div>
       <div class="evp-h">${C.q}</div><div class="evp-prios">${opts}</div>
@@ -1710,7 +1851,7 @@ function buildDeptConsole(g, d) {
     const S = LIFE_EV[lifeEv.id].steps[lifeEv.step];
     lvHud.innerHTML = '<b>🔎 FIND THE RESERVE</b> · ' + S.goal + ' <button id="lv-hint">💡 Hint</button>';
     lvHud.style.display = 'block';
-    document.getElementById('lv-hint').onclick = () => { lifeEv.hint = true; hintUntil = clock.getElapsedTime() + 6; lvSay('💡 ' + S.hint, ''); };
+    document.getElementById('lv-hint').onclick = () => { if (noLink()) { lvSay('📡 No link to Earth right now, so hints are unavailable.', 'bad'); return; } lifeEv.hint = true; hintUntil = clock.getElapsedTime() + 6; lvSay('💡 ' + S.hint, ''); };
   }
   function startHunt() {
     lifeEv.stage = 'hunt'; lifeEv.step = 0; showHud();
@@ -1732,7 +1873,8 @@ function buildDeptConsole(g, d) {
     lvPanel.style.display = 'none'; lvHud.style.display = 'none';
     lifeD.ringMat.color.set(lifeD.color);
     if (reserveObjs) reserveObjs.forEach(o => { o.userData.solved = false; });
-    lifeEv = null; evTimer = 30; if (state === 'levent') state = 'inside'; line.textContent = '';
+    if (lifeEv && lifeEv.counted) pw.handled++;
+    lifeEv = null; evTimer = nextEvDelay(); if (state === 'levent') state = 'inside'; line.textContent = '';
   }
   function resumeLifeEvent() {   // called when the player walks into Life Support while an event is active
     if (!lifeEv) return;
@@ -1767,14 +1909,37 @@ function buildDeptConsole(g, d) {
     beep(880, .18, 0); beep(660, .18, .25); beep(880, .18, .5);
     line.textContent = E.goal;
   }
+  // ---- emergency scheduler: random gap, weighted pick, never the same event twice in a row ----
+  const recentEv = [];
+  function nextEvDelay() {          // 25-50 s between emergencies, a little faster late in the mission
+    const late = pw.started ? 1 - pw.time / MISSION_SEC : 0;
+    return (25 + Math.random() * 25) * (1 - .25 * late);
+  }
   function pickEvent() {
-        const pool = EVENT_POOL.filter(k => k !== lastEv && (k !== 'co2' || pw.level < BATT.WARN)), id = pool[Math.floor(Math.random() * pool.length)];
-    lastEv = id;
-    if (id === 'flare') triggerEvent('flare'); else triggerLifeEvent(id);
+    if (pw.over) return;
+    const W = { co2: 3, leak: 2, cold: 2, o2: 2, power: 2, water: 2, solar: 2, comm: 2, flare: 3, radiation: 3 };
+    if (pw.level < 40) { W.co2 *= 2; W.power *= 2; W.solar *= 2; }
+    const ok = k => (k !== 'co2' || pw.level < BATT.WARN) && (k !== 'radiation' || !rad.seen || Math.random() < .5);
+    let pool = EVENT_POOL.filter(k => recentEv.indexOf(k) < 0 && ok(k));
+    if (!pool.length) pool = EVENT_POOL.filter(k => k !== lastEv && (k !== 'co2' || pw.level < BATT.WARN));
+    let r = Math.random() * pool.reduce((a, k) => a + W[k], 0), id = pool[pool.length - 1];
+    for (const k of pool) { r -= W[k]; if (r <= 0) { id = k; break; } }
+    lastEv = id; recentEv.push(id); if (recentEv.length > 2) recentEv.shift();
+    const fire = () => {
+      if (pw.over) return;
+      if (id === 'power') pw.level = Math.max(0, pw.level - 12);   // the faulty line wastes some battery
+      if (id === 'flare') triggerEvent('flare'); else if (id === 'radiation') triggerRadiation(); else triggerLifeEvent(id);
+      if (!lifeEv && !flareActive && !rad.on) evTimer = 5;       // could not start right now: try again soon
+    };
+    if (pw.comms === 'saver' && !pw.powerOut) {                  // saving mode = delayed messages
+      evTimer = 1e9;
+      btNotify('📡 Communication is in saving mode, so the alert from the sensors is arriving late...', '#ffb066', 4500);
+      setTimeout(fire, 4500);
+    } else fire();
   }
   function updateLifeEvents(t) {
     const dt = Math.min(t - lifeLast, .1); lifeLast = t;
-    if (!flareActive && !lifeEv) { evTimer -= dt; if (evTimer <= 0 && state === 'base' && !busy) pickEvent(); }
+    if (!flareActive && !lifeEv && !rad.on && !rad.follow) { evTimer -= dt; if (evTimer <= 0 && state === 'base' && !busy && !pw.over && pw.started) pickEvent(); }
     if (lifeEv) lifeD.ringMat.opacity = .4 + .5 * Math.abs(Math.sin(t * 5));
     const txt = flareActive ? '⚠ Solar flare: find the Communication base' : lifeEv ? '⚠ ' + EVENTS[lifeEv.id].title + ': find the Life Support base' : '';
     if (evObj._t !== txt) { evObj.textContent = txt; evObj._t = txt; }
@@ -1820,6 +1985,7 @@ function buildDeptConsole(g, d) {
   function alarmList() {
     const a = [];
     if (flareActive) a.push({ c: '#ff5d5d', t: 'Solar flare: only 40% of the bandwidth works.', w: 'Communication', ev: 1 });
+    if (rad.on && rad.phase !== 'idle') a.push({ c: '#ff5d5d', t: 'Radiation storm in progress', w: 'Whole base', ev: 1 });
     if (lifeEv) a.push({ c: '#ff5d5d', t: EVENTS[lifeEv.id].title + ': ' + EVENTS[lifeEv.id].msg, w: 'Life Support', ev: 1 });
     DEPTS.forEach(d => (d.res || []).forEach(r => {
       const lv = lvOf(r.pct); if (lv === 'A') return;
@@ -1860,8 +2026,14 @@ function buildDeptConsole(g, d) {
   //  BATTERY + POWER MODES  and  MISSION MENU (way back to the start)
   //  Frontend only: everything lives in the browser.
   // =====================================================================
-  const BATT = { FULL: 0.15, SAVER: 0.04, WARN: 50 };   // battery % lost per SECOND by one unit (tweak these)
-  const pw = { level: 100, life: 'full', comms: 'full', started: false, guided: false, guideOpen: false, empty: false, last: performance.now() };
+  const BATT = { FULL: 0.14, SAVER: 0.03, WARN: 50, CRIT: 20, EMERG: 10, SOLAR: 0.06 };   // CRIT / EMERG = warning levels; SOLAR = extra drain while a solar panel is damaged
+  const BAT_GAIN = { co2: 20, power: 15, solar: 10, comm: 5 };   // % the spare battery pack adds for each emergency
+  const noLink = () => pw.comms === 'saver' || (lifeEv && lifeEv.id === 'comm');   // no radio link to Mission Control   // battery % lost per SECOND by one unit (tweak these)
+  const MISSION_SEC = 600;                               // the crew must survive this long to win (10 minutes)
+  // crew health lost per second (tweak these)
+  const HEALTH = { EVENT: 0.45, FLARE: 0.25, SAVER: 0.1, REGEN: 0.15, GRACE: 45, GRACE_LOW: 25 };   // GRACE_LOW = seconds before an unsolved emergency hurts when Communication is in saving mode
+  const pw = { level: 100, life: 'full', comms: 'full', started: false, guided: false, guideOpen: false, empty: false, last: performance.now(),
+    time: MISSION_SEC, crew: 100, over: false, powerOut: false, handled: 0, lifeAge: 0, flareAge: 0, restricted: false, critShown: false };
   lifeD.res[2].pct = 100;                                // the "Power Battery" reading in Life Support now follows the real battery
 
   const btCss = document.createElement('style');
@@ -1906,18 +2078,22 @@ function buildDeptConsole(g, d) {
   menuBtn.className = 'btn btn-ghost'; menuBtn.innerHTML = '☰ Mission menu';
   btHud.innerHTML = '<div class="bt-row"><div class="bt-ico"><i id="bt-fill"></i></div><b class="bt-pct" id="bt-pct">100%</b><button class="bt-i" id="bt-info" title="Power guide">i</button></div>'
     + '<span class="bt-rate" id="bt-rate"></span>'
+    + '<span class="bt-rate" id="bt-tm" style="opacity:1;font-size:.82rem;margin:.1rem 0 .45rem"></span>'
     + '<button class="bt-u" data-u="life" title="Click to switch between full power and battery saving">🌬️ Life Support <b></b></button>'
     + '<button class="bt-u" data-u="comms" title="Click to switch between full power and battery saving">📡 Communication <b></b></button>';
   [btHud, menuBtn, btGuide, menuPanel].forEach(el => el.addEventListener('pointerdown', e => e.stopPropagation()));   // clicks here must not make the astronaut walk
 
   // ---------- battery HUD ----------
-  const btRate = () => (pw.life === 'full' ? BATT.FULL : BATT.SAVER) + (pw.comms === 'full' ? BATT.FULL : BATT.SAVER);
+  const btRate = () => (pw.life === 'full' ? BATT.FULL : BATT.SAVER) + (pw.comms === 'full' ? BATT.FULL : BATT.SAVER) + (lifeEv && lifeEv.id === 'solar' ? BATT.SOLAR : 0);
   function btRender() {
     const p = Math.round(pw.level), col = p >= 50 ? '#7ddba3' : p >= 25 ? '#ffb066' : '#ff5d5d';
     btHud.style.setProperty('--bc', col); btHud.classList.toggle('low', p < 25);
     btHud.querySelector('#bt-fill').style.width = p + '%';
     btHud.querySelector('#bt-pct').textContent = p + '%';
-    btHud.querySelector('#bt-rate').textContent = 'Using about ' + (btRate() * 60).toFixed(0) + '% per minute';
+    { const left = pw.level / Math.max(.0001, btRate()), short = left < pw.time, el = btHud.querySelector('#bt-rate');
+      el.textContent = 'Using about ' + (btRate() * 60).toFixed(1) + '% per minute · ' + (short ? '⚠ empty in ' + fmtT(left) : '✔ lasts the whole mission');
+      el.style.color = short ? '#ff9a8f' : '#7ddba3'; }
+    btHud.querySelector('#bt-tm').innerHTML = '⏱ Mission ' + fmtT(pw.time) + ' &nbsp;·&nbsp; 👩‍🚀 Crew <b style="color:' + (pw.crew > 60 ? '#7ddba3' : pw.crew > 30 ? '#ffb066' : '#ff5d5d') + '">' + Math.round(pw.crew) + '%</b>';
     btHud.querySelectorAll('.bt-u').forEach(b => { const eco = pw[b.dataset.u] === 'saver'; b.classList.toggle('eco', eco); b.querySelector('b').textContent = eco ? 'SAVING' : 'FULL'; });
   }
   let btTimer = null;
@@ -1928,10 +2104,13 @@ function buildDeptConsole(g, d) {
   btHud.addEventListener('click', e => {
     if (e.target.id === 'bt-info') { openGuide(); return; }
     const b = e.target.closest('.bt-u'); if (!b) return;
-    const u = b.dataset.u; pw[u] = pw[u] === 'full' ? 'saver' : 'full'; btRender();
+    if (pw.over) return;
+    const u = b.dataset.u;
+    if (pw.restricted && pw[u] === 'saver') { btNotify('🚨 <b>Emergency power:</b> full power is locked until the battery is above ' + (BATT.EMERG + 5) + '%.', '#ff5d5d', 5000); return; }
+    pw[u] = pw[u] === 'full' ? 'saver' : 'full'; btRender();
     const name = u === 'life' ? '🌬️ Life Support' : '📡 Communication', eco = pw[u] === 'saver';
     btNotify(eco
-      ? name + ' is now in <b>BATTERY SAVING</b> mode, so the battery drains slower. ' + (u === 'life' ? 'CO₂ removal and oxygen generation are slower, and heating is weaker.' : 'Emergency messages only, more noise, longer delay.')
+      ? name + ' is now in <b>BATTERY SAVING</b> mode, so the battery drains slower. ' + (u === 'life' ? 'CO₂ removal and oxygen generation are slower, heating is weaker, emergencies get worse faster, and the crew slowly loses health.' : 'Emergency messages only, delayed alerts, no tips from Mission Control, and emergencies hurt sooner.')
       : name + ' is back at <b>FULL POWER</b>. The battery drains faster.', eco ? '#ffb066' : '#7ddba3', 7000);
   });
 
@@ -1939,15 +2118,15 @@ function buildDeptConsole(g, d) {
   function guideHTML() {
     return `<div class="bt-card">
       <div class="bt-gh"><b>⚠ BATTERY BELOW ${BATT.WARN}%</b><button class="bt-x" data-a="close">✕ Close</button></div>
-      <p>The base can no longer keep every unit at full power. You may keep <b>one unit at full power</b> and put the <b>other unit in battery saving mode</b>. A unit in saving mode uses only about a quarter of the power.</p>
+      <p>The base can no longer keep every unit at full power. You may keep <b>one unit at full power</b> and put the <b>other unit in battery saving mode</b>. A unit in saving mode uses only about a fifth of the power. <b>If the battery reaches 0% before the mission timer ends, the mission is lost.</b> The mission clock keeps running while you read this.</p>
       <div class="bt-cols">
-        <div class="bt-col" style="--c:#ff6fa5"><h4>📡 Communication in saving mode</h4><ul><li>Only emergency messages can be received</li><li>The signal has more noise</li><li>Delay gets longer (1.3 s becomes about 4 s)</li></ul></div>
-        <div class="bt-col" style="--c:#6ab4ff"><h4>🌬️ Life Support in saving mode</h4><ul><li>CO₂ removal gets slower, and after some time an astronaut may fall ill</li><li>Oxygen generation takes much longer</li><li>Temperature control cannot keep the cabin warm</li></ul></div>
+        <div class="bt-col" style="--c:#ff6fa5"><h4>📡 Communication in saving mode</h4><ul><li>Only emergency messages can be received</li><li>The signal has more noise</li><li>Delay gets longer (1.3 s becomes about 4 s)</li><li>Mission Control cannot send tips or hints, and emergencies hurt the crew sooner</li></ul></div>
+        <div class="bt-col" style="--c:#6ab4ff"><h4>🌬️ Life Support in saving mode</h4><ul><li>CO₂ removal gets slower, and after some time an astronaut may fall ill</li><li>Oxygen generation takes much longer</li><li>Temperature control cannot keep the cabin warm</li><li>The crew slowly loses health while it lasts</li></ul></div>
       </div>
       <div class="bt-h">WHICH UNIT KEEPS FULL POWER?</div>
       <button class="bt-opt" data-a="life" style="--c:#6ab4ff"><span>🌬️</span><span>Keep Life Support at full power<small>Communication goes to battery saving mode</small></span></button>
       <button class="bt-opt" data-a="comms" style="--c:#ff6fa5"><span>📡</span><span>Keep Communication at full power<small>Life Support goes to battery saving mode</small></span></button>
-      <button class="bt-keep" data-a="both">Keep both at full power for now (the battery drains fast)</button></div>`;
+      <button class="bt-keep" data-a="both">Keep both at full power for now (the battery will run out in about 6 minutes)</button></div>`;
   }
   function openGuide() { pw.guideOpen = true; pw.guided = true; btGuide.innerHTML = guideHTML(); btGuide.style.display = 'flex'; }
   function closeGuide() { pw.guideOpen = false; btGuide.style.display = 'none'; }
@@ -1964,39 +2143,508 @@ function buildDeptConsole(g, d) {
 
   // ---------- mission menu: back to the mode screen or the title screen ----------
   menuPanel.innerHTML = '<div class="mn-card"><h3>Mission menu</h3><p>Where would you like to go? Leaving the base restarts this mission.</p>'
+    + '<button class="mn-opt" data-a="restart" style="--c:#7ddba3"><span class="mn-ico">🔄</span><span>Restart mission<small>Same category, fresh battery and timer</small></span></button>'
     + '<button class="mn-opt" data-a="mode" style="--c:#ffb066"><span class="mn-ico">🗺️</span><span>Change mission category<small>Go back to the Category A / B screen</small></span></button>'
+    + '<button class="mn-opt" data-a="newplayer" style="--c:#c792ff"><span class="mn-ico">👤</span><span>New player<small>Clear this astronaut and start the introduction again</small></span></button>'
     + '<button class="mn-opt" data-a="home" style="--c:#6ab4ff"><span class="mn-ico">🏠</span><span>Back to the title screen<small>Start the game from the beginning</small></span></button>'
     + '<button class="btn btn-play" data-a="stay" style="width:100%;margin-top:.8rem">Keep playing</button></div>';
   function leaveBase(url) {
-    try { ['astro_intro_done', 'astro_last_page', 'mode'].forEach(k => localStorage.removeItem(k)); } catch (err) { }   // so progress.js does not bounce you back here
+    try { ['astro_intro_done', 'astro_last_page'].forEach(k => localStorage.removeItem(k)); } catch (err) { }   // the chosen category ('mode') is kept on purpose   // so progress.js does not bounce you back here
     location.href = url;
   }
   menuBtn.addEventListener('click', () => { menuPanel.style.display = 'flex'; });
   menuPanel.addEventListener('click', e => {
     if (e.target === menuPanel) { menuPanel.style.display = 'none'; return; }
     const b = e.target.closest('[data-a]'); if (!b) return;
-    if (b.dataset.a === 'mode') leaveBase('mode.html?home');
+    if (b.dataset.a === 'restart') location.reload();
+    else if (b.dataset.a === 'newplayer') { try { if (window.AstroProgress) AstroProgress.logout(); else ['astronaut', 'mode', 'astro_intro_done', 'astro_last_page'].forEach(k => localStorage.removeItem(k)); } catch (err) { } location.href = 'index.html?home'; }
+    else if (b.dataset.a === 'mode') leaveBase('mode.html?home');
     else if (b.dataset.a === 'home') leaveBase('index.html?home');
     else menuPanel.style.display = 'none';
   });
   addEventListener('keydown', e => { if (e.key === 'Escape') { menuPanel.style.display = 'none'; if (pw.guideOpen) closeGuide(); } });
 
-  // ---------- the clock: drains the battery and watches the thresholds ----------
+  // ---------- mission clock: timer, battery, crew health, win / lose ----------
+  const powerD = DEPTS.find(d => d.id === 'power');
+  function fmtT(sec) { sec = Math.max(0, Math.ceil(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
+  const endCss = document.createElement('style');
+  endCss.textContent = `
+    #mission-end{position:fixed;inset:0;z-index:12;display:none;align-items:center;justify-content:center;background:rgba(2,4,10,.82);backdrop-filter:blur(5px);font-family:Barlow,sans-serif}
+    .me-card{width:min(480px,92vw);max-height:92vh;overflow:auto;padding:22px 24px;border-radius:16px;background:rgba(13,21,38,.98);border:2px solid var(--c,#7ddba3);box-shadow:0 0 50px rgba(0,0,0,.6);color:#eef1f6;text-align:center}
+    .me-card h2{margin:.2rem 0 .3rem;font:800 2.2rem 'Big Shoulders Display',sans-serif;text-transform:uppercase;color:var(--c,#7ddba3)}
+    .me-card p{margin:.3rem 0 .8rem;opacity:.85}
+    .me-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:.8rem 0 1rem;text-align:left}
+    .me-grid div{padding:.5rem .7rem;border-radius:10px;background:rgba(255,255,255,.06);font-size:.82rem;opacity:.95}
+    .me-grid b{display:block;font-size:1.25rem}
+    .me-btns{display:flex;flex-direction:column;gap:.5rem}`;
+  document.head.appendChild(endCss);
+  const endEl = mkEl('div', 'mission-end');
+  [endEl].forEach(el => el.addEventListener('pointerdown', e => e.stopPropagation()));
+  endEl.addEventListener('click', e => {
+    const b = e.target.closest('[data-a]'); if (!b) return;
+    if (b.dataset.a === 'again') location.reload();
+    else if (b.dataset.a === 'mode') leaveBase('mode.html?home');
+    else if (b.dataset.a === 'home') leaveBase('index.html?home');
+  });
+  function endMission(won, reason) {
+    if (pw.over) return;
+    pw.over = true; busy = true; evTimer = 1e9; walkDir = 0;
+    [evPanel, lvPanel, radPanel, btGuide, menuPanel, stPanel, btNote, lvHud].forEach(el => { if (el) el.style.display = 'none'; });
+    const used = MISSION_SEC - pw.time, score = Math.round(pw.crew * 4 + pw.level * 2 + pw.handled * 60 + (won ? 400 : 0));
+    const c = won ? '#7ddba3' : '#ff5d5d';
+    endEl.innerHTML = `<div class="me-card" style="--c:${c}"><h2>${won ? 'Mission complete!' : 'Mission failed'}</h2>`
+      + `<p>${won ? 'The crew survived the whole mission. Great decisions, Commander!' : reason}</p>`
+      + `<div class="me-grid"><div>Survival time<b>${fmtT(used)} / ${fmtT(MISSION_SEC)}</b></div><div>Crew health<b>${Math.round(pw.crew)}%</b></div>`
+      + `<div>Battery left<b>${Math.round(pw.level)}%</b></div><div>Emergencies solved<b>${pw.handled}</b></div>`
+      + `<div style="grid-column:1/-1">Mission score<b>${score}</b></div></div>`
+      + `<div class="me-btns"><button class="btn btn-play" data-a="again">${won ? 'Play again' : 'Try again'}</button>`
+      + `<button class="btn btn-ghost" data-a="mode">Change mission category</button><button class="btn btn-ghost" data-a="home">Back to the title screen</button></div></div>`;
+    endEl.style.display = 'flex';
+  }
+  let lastPct = -1;
   setInterval(() => {
-    const now = performance.now(), dt = Math.min((now - pw.last) / 1000, .5); pw.last = now;
-    menuBtn.style.display = state === 'base' ? 'inline-flex' : 'none';
+    const now = performance.now(), dt = Math.min((now - pw.last) / 1000, 60); pw.last = now;   // real time always counts (a hidden tab or an open panel cannot pause the mission)
+    menuBtn.style.display = state === 'base' && !pw.over ? 'inline-flex' : 'none';
     if (!pw.started && state === 'base') {
       pw.started = true; btHud.style.display = 'block';
-      btNotify('⚡ <b>Life Support</b> and <b>Communication</b> are running at <b>FULL POWER</b>.', '#7ddba3', 8000);
+      btNotify('⚡ <b>Life Support</b> and <b>Communication</b> are running at <b>FULL POWER</b>. Survive for <b>' + fmtT(MISSION_SEC) + '</b> to complete the mission. <b>If the battery reaches 0%, the mission is over</b>, so save power!', '#7ddba3', 9000);
+      evTimer = nextEvDelay();
     }
-    if (pw.started && !pw.guideOpen) pw.level = Math.max(0, pw.level - btRate() * dt);
-    lifeD.res[2].pct = Math.round(pw.level);
+    if (pw.started && !pw.over) {
+      pw.time = Math.max(0, pw.time - dt);
+      pw.level = Math.max(0, pw.level - (pw.level <= 0 ? 0 : btRate()) * dt);       // never below 0
+      if (pw.level <= 0) endMission(false, 'The battery reached 0% before the ' + fmtT(MISSION_SEC) + ' were over. Life support lost power and the crew could not survive.');   // the rule of the game
+      if (!pw.over) {
+        if (pw.level <= BATT.EMERG && !pw.restricted) {
+          pw.restricted = true; pw.comms = 'saver';
+          btNotify('🚨 <b>EMERGENCY POWER:</b> under ' + BATT.EMERG + '%. Communication was forced into saving mode and nothing can be switched to full power until the battery is above ' + (BATT.EMERG + 5) + '%.', '#ff5d5d', 11000);
+        } else if (pw.level <= BATT.CRIT && !pw.critShown) {
+          pw.critShown = true;
+          btNotify('⚠️ <b>CRITICAL BATTERY:</b> ' + Math.round(pw.level) + '% left. Switch systems to saving mode or find the spare battery pack.', '#ffb066', 9000);
+        }
+        if (pw.restricted && pw.level > BATT.EMERG + 5) pw.restricted = false;
+        if (pw.critShown && pw.level > BATT.CRIT + 5) pw.critShown = false;
+      }
+      pw.lifeAge = lifeEv ? pw.lifeAge + dt : 0; pw.flareAge = flareActive ? pw.flareAge + dt : 0;
+      let loss = 0;
+      const grace = pw.comms === 'saver' ? HEALTH.GRACE_LOW : HEALTH.GRACE;   // without a radio link Earth cannot help, so emergencies hurt sooner
+      if (pw.lifeAge > grace) loss += HEALTH.EVENT * (pw.life === 'saver' ? 1.6 : 1);   // saving mode = weaker oxygen, CO₂ removal and heating, so emergencies get worse faster
+      if (evTimer < -20 && !lifeEv && !flareActive && !rad.on) loss += HEALTH.EVENT * .5;   // a queued emergency is waiting: hiding inside a building is not free
+      if (pw.flareAge > grace) loss += HEALTH.FLARE;
+      if (pw.life === 'saver') loss += HEALTH.SAVER;
+      pw.crew = loss > 0 ? Math.max(0, pw.crew - loss * dt) : Math.min(100, pw.crew + HEALTH.REGEN * dt);
+      if (pw.crew <= 0) endMission(false, pw.level <= 0 ? 'The battery ran out and life support failed.' : pw.lifeAge > grace ? 'An emergency was left unsolved for too long.' : 'The crew could not survive the conditions on the Moon.');
+      else if (pw.time <= 0) endMission(true);
+    }
+    const p = Math.round(pw.level);
+    lifeD.res[2].pct = p;                              // every battery display reads pw.level
+    if (powerD) powerD.res[1].pct = p;
+    if (p !== lastPct) {
+      lastPct = p;
+      liveTex.forEach(t => t.repaint());
+      liveRead.forEach(s => { if (s.userData.res === lifeD.res[2]) s.userData.repaint(p); });
+    }
     btRender();
-    if (pw.started && pw.level < BATT.WARN && !pw.guided && !pw.guideOpen && (state === 'base' || state === 'inside') && !busy) openGuide();
-    if (pw.level <= 0 && !pw.empty) { pw.empty = true; btNotify('🪫 <b>Battery empty!</b> The units have almost no power left.', '#ff5d5d', 9000); }
+    if (pw.started && !pw.over && pw.level < BATT.WARN && !pw.guided && !pw.guideOpen && (state === 'base' || state === 'inside') && !busy) openGuide();
   }, 250);
 
 
+
+// =====================================================================
+  //  RADIATION EMERGENCY  (NASA DONKI · SEP event)
+  //  Paste this whole block ABOVE the line:  // intro: landing + story lines
+  //  Flow: random alert -> decision A/B -> countdown -> visit each department's
+  //  intercom -> crew walk to the Radiation Shelter -> storm peak -> result ->
+  //  damaged resources -> forced follow-up crisis.   (Press R in base to test.)
+  // =====================================================================
+  const CREW = { life: 3, power: 2, comms: 2, supply: 3 };               // 10 astronauts in total
+  const WALKER_OF = { life: [0, 4], power: [1], comms: [2], supply: [3] }; // which outdoor walkers belong to which department
+  const DOOR = V(0, 0, -1.6);                                              // shelter door (outside, front)
+  const RADCFG = { A: { T: 150, react: 3, rate: 1 }, B: { T: 120, react: 20, rate: 2.2 } }; // T = seconds until peak
+  const STORM_LEN = 15, HURT = 50, SPEED = 5;
+  // [resource index in d.res, % lost if crew NOT alerted, % lost if alerted]
+  const DMG = {
+    life: [[2, 14, 5], [1, 18, 6]], power: [[0, 40, 12]],
+    comms: [[0, 28, 9], [2, 12, 4]], supply: [[1, 24, 8], [2, 8, 3]]
+  };
+  const IC_POS = { life: [-8, .5], power: [-5, 1.5], comms: [-5.5, 1.5], supply: [-5, 1.5] };
+  const rad = { on: false, phase: 'idle', choice: null, sel: null, el: 0, T: 150, react: 3, crew: {}, dmg: [], dsum: {}, feed: '', ic: null, follow: null, followAt: 0, seated: 0 ,seen: false };
+  EVENTS.radiation = {
+    title: 'RADIATION STORM', msg: 'NASA detected a solar particle event. Radiation is rising!',
+    goal: 'Alert every department, then get the crew to the Radiation Shelter!',
+    lesson: 'Protecting astronauts from radiation is more important than completing routine tasks.'
+  };
+  const alertOn = () => rad.on && (rad.phase === 'warn' || rad.phase === 'storm');
+  const radIn = () => rad.on ? DEPTS.reduce((s, d) => s + (rad.crew[d.id] && rad.crew[d.id].arrived ? rad.crew[d.id].n : 0), 0) : 0;
+  const crewStatus = c => c.dose >= HURT ? 'INJURED' : c.arrived ? 'IN SHELTER' : c.alerted ? 'EN ROUTE' : 'OUTDOORS';
+  const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  function radInit() {
+    rad.crew = {}; rad.dmg = []; rad.dsum = {};
+    DEPTS.forEach(d => { rad.crew[d.id] = { n: CREW[d.id], alerted: false, tAlert: 0, arrived: false, dose: 0, travel: Math.hypot(d.x - DOOR.x, d.z - DOOR.z) / SPEED }; });
+  }
+
+  // ---------- styles + page elements ----------
+  const rCss = document.createElement('style');
+  rCss.textContent = `
+    #rad-hud{position:fixed;left:1rem;top:4.2rem;z-index:3;display:none;width:min(280px,72vw);padding:.6rem .8rem;border-radius:12px;background:rgba(30,6,6,.9);border:2px solid #ff5d5d;color:#eef1f6;font:500 .85rem Barlow,sans-serif;pointer-events:none;box-shadow:0 0 24px rgba(255,93,93,.35)}
+    #rad-hud b{color:#ff8a7a;letter-spacing:.1em}
+    .rh-t{font:800 2.3rem 'Big Shoulders Display',Barlow,sans-serif;line-height:1.05}
+    .rh-r{display:flex;justify-content:space-between;gap:8px;margin:.2rem 0}
+    #rad-vig{position:fixed;inset:0;z-index:2;pointer-events:none;display:none;box-shadow:inset 0 0 160px rgba(255,40,30,.6);animation:radv .7s ease-in-out infinite alternate}
+    @keyframes radv{to{opacity:.4}}
+    #rad-panel{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:4;pointer-events:none;font-family:Barlow,sans-serif}`;
+  document.head.appendChild(rCss);
+  const radHudEl = mkEl('div', 'rad-hud'), radVig = mkEl('div', 'rad-vig'), radPanel = mkEl('div', 'rad-panel');
+  let radToastN = 0, radHudKey = '';
+  function radToast(title, msg, goal, ms) {
+    const id = ++radToastN;
+    evToast.innerHTML = `<div class="evt-card"><div class="evt-ico">☢</div><div><b>${title}</b><p>${msg}</p>${goal ? `<p class="evt-go">▶ ${goal}</p>` : ''}</div></div>`;
+    evToast.style.display = 'flex'; toastOn = true;
+    gsap.fromTo(evToast.firstChild, { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: .4 });
+    setTimeout(() => { if (id !== radToastN) return; toastOn = false; gsap.to(evToast.firstChild, { opacity: 0, duration: .5, onComplete: () => { evToast.style.display = 'none'; } }); }, ms);
+  }
+
+  // ---------- drawing helpers ----------
+  function trefoil(x, cx, cy, r, col, bg) {
+    x.fillStyle = col;
+    for (let i = 0; i < 3; i++) { const a = i * 2.0944 - Math.PI / 2; x.beginPath(); x.moveTo(cx, cy); x.arc(cx, cy, r, a - Math.PI / 6, a + Math.PI / 6); x.closePath(); x.fill(); }
+    x.fillStyle = bg; x.beginPath(); x.arc(cx, cy, r * .22, 0, 6.283); x.fill();
+    x.fillStyle = col; x.beginPath(); x.arc(cx, cy, r * .13, 0, 6.283); x.fill();
+  }
+  const mkScreen = (w, h) => { const [c, x] = cv(w, h); return { c, x, w, h, t: tex(c) }; };
+  function drawExt(S) {   // red alert screen on the outside of the shelter
+    const x = S.x, w = S.w, h = S.h, on = alertOn(), col = on ? '#ff4a3a' : '#4ff0c8';
+    x.fillStyle = on ? '#2a0606' : '#04121a'; x.fillRect(0, 0, w, h); x.strokeStyle = col; x.lineWidth = 8; x.strokeRect(4, 4, w - 8, h - 8);
+    trefoil(x, w / 2, h * .24, h * .15, col, on ? '#2a0606' : '#04121a');
+    x.fillStyle = col; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `700 ${h * .1}px Barlow, sans-serif`;
+    x.fillText(on ? 'RADIATION' : 'SHELTER', w / 2, h * .5); x.fillText(on ? 'ALERT' : 'READY', w / 2, h * .61);
+    x.fillStyle = '#eef1f6'; x.font = `600 ${h * .062}px Barlow, sans-serif`;
+    x.fillText(on ? 'Move to shelter immediately!' : 'Radiation levels normal', w / 2, h * .76);
+    x.fillText('Crew inside: ' + radIn() + ' / 10', w / 2, h * .88); S.t.needsUpdate = true;
+  }
+  function drawRadScreen(S) {   // inside: "Radiation Level" board
+    const x = S.x, w = S.w, h = S.h, st = rad.phase === 'storm', f = alertOn() ? (st ? 6 : 1 + rad.el / rad.T) : .3, p = Math.min(1, f / 6);
+    const col = p > .6 ? '#ff5d5d' : p > .25 ? '#ffb066' : '#7ddba3';
+    x.fillStyle = '#04101c'; x.fillRect(0, 0, w, h); x.strokeStyle = '#6ab4ff'; x.lineWidth = 6; x.strokeRect(3, 3, w - 6, h - 6);
+    x.fillStyle = '#eef1f6'; x.font = '700 36px Barlow, sans-serif'; x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText('Radiation Level (outside)', 22, 40);
+    x.fillStyle = 'rgba(255,255,255,.14)'; x.fillRect(22, 90, w - 44, 34); x.fillStyle = col; x.fillRect(22, 90, (w - 44) * p, 34);
+    x.fillStyle = col; x.font = '700 32px Barlow, sans-serif'; x.fillText(alertOn() ? (st ? 'SOLAR STORM PEAK' : 'RISING') : 'NORMAL', 22, 160);
+    x.fillStyle = '#7ddba3'; x.font = '700 34px Barlow, sans-serif'; x.fillText('✔ Safe inside shelter', 22, 230); S.t.needsUpdate = true;
+  }
+  function drawCrewScreen(S) {   // inside: where is everybody?
+    const x = S.x, w = S.w, h = S.h;
+    x.fillStyle = '#04101c'; x.fillRect(0, 0, w, h); x.strokeStyle = '#4ff0c8'; x.lineWidth = 6; x.strokeRect(3, 3, w - 6, h - 6);
+    x.fillStyle = '#4ff0c8'; x.font = '700 32px Barlow, sans-serif'; x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText('CREW STATUS · ' + radIn() + ' / 10 SEATED', 22, 38);
+    if (!rad.on) { x.fillStyle = '#eef1f6'; x.font = '600 30px Barlow, sans-serif'; x.fillText('Shelter on standby', 22, 110); x.fillText('10 seats · 10 suits ready', 22, 160); }
+    else DEPTS.forEach((d, i) => {
+      const c = rad.crew[d.id], s = crewStatus(c), col = { 'IN SHELTER': '#7ddba3', 'EN ROUTE': '#ffb066', 'OUTDOORS': '#ff5d5d', 'INJURED': '#ff5d5d' }[s];
+      x.fillStyle = '#eef1f6'; x.font = '600 28px Barlow, sans-serif'; x.textAlign = 'left'; x.fillText(d.name + ' (' + c.n + ')', 22, 90 + i * 46);
+      x.fillStyle = col; x.font = '700 28px Barlow, sans-serif'; x.textAlign = 'right'; x.fillText(s, w - 22, 90 + i * 46);
+    });
+    S.t.needsUpdate = true;
+  }
+
+  // ---------- the Radiation Shelter building (outside) ----------
+  const SH = { id: 'shelter', name: 'Radiation Shelter', color: '#ffd36a' };
+  let shExtScr = null, shLight = null, shBeacon = null, shRing = null, shInt = null;
+  (function buildShelterExterior() {
+    const g = new THREE.Group(), hull = mat(0x7b8498, { metalness: .7, roughness: .4 }), yel = mat(0xe8b520, { metalness: .5, roughness: .45 });
+    const w = 11, h = 7.2, c = 1.8;
+    const pts = [[-w / 2 + c, 0], [w / 2 - c, 0], [w / 2, c], [w / 2, h - c], [w / 2 - c, h], [-w / 2 + c, h], [-w / 2, h - c], [-w / 2, c]].map(p => new THREE.Vector2(p[0], p[1]));
+    const body = new THREE.Mesh(new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: 8, bevelEnabled: false }), hull); body.position.z = -4; g.add(body);
+    box(g, .5, 5.2, .5, yel, -3.9, 2.8, 4.1); box(g, .5, 5.2, .5, yel, 3.9, 2.8, 4.1); box(g, 8.3, .5, .5, yel, 0, 5.5, 4.1);
+    box(g, 7.3, 4.9, .3, mat(0x0a0d12, { metalness: .6, roughness: .4 }), 0, 2.65, 4.05);
+    box(g, 6.4, .08, 1.2, glow(0xffd36a, 1.2), 0, .25, 4.3); box(g, 6.4, .1, .1, glow(0xffd36a, 1.8), 0, 4.95, 4.25);
+    const [sc, sx] = cv(768, 160); sx.fillStyle = '#e8b520'; sx.fillRect(0, 0, 768, 160); sx.strokeStyle = '#7a5a10'; sx.lineWidth = 8; sx.strokeRect(4, 4, 760, 152);
+    trefoil(sx, 88, 80, 56, '#14161a', '#e8b520'); sx.fillStyle = '#15181e'; sx.font = '700 80px Barlow, sans-serif'; sx.textAlign = 'center'; sx.textBaseline = 'middle'; sx.fillText('RADIATION SHELTER', 440, 84);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.25), new THREE.MeshBasicMaterial({ map: tex(sc), toneMapped: false })); sign.position.set(0, 6.4, 4.12); g.add(sign);
+    shLight = box(g, .7, .7, .2, glow(0x3dff88, 2), 4.85, 4.4, 4.12);
+    box(g, 2.6, 3.6, .6, mat(0x39404d, { metalness: .6, roughness: .5 }), 7.7, 1.9, 3.2); box(g, 2.6, .3, .7, hazMat, 7.7, .15, 3.2);
+    shExtScr = mkScreen(256, 340); drawExt(shExtScr);
+    const sp = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.9), new THREE.MeshBasicMaterial({ map: shExtScr.t, toneMapped: false })); sp.position.set(7.7, 2.0, 3.52); g.add(sp);
+    shBeacon = glowSprite(0xff3030, 7, 0); shBeacon.position.set(0, 8.1, 0); shBeacon.raycast = () => { }; g.add(shBeacon);
+    const rg = new THREE.RingGeometry(8.6, 9.3, 56); rg.rotateX(-Math.PI / 2);
+    shRing = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: .3, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); shRing.position.y = .09; shRing.raycast = () => { }; g.add(shRing);
+    g.traverse(o => { if (o.isMesh && o !== shRing) { o.castShadow = true; o.receiveShadow = true; } });
+    g.position.set(0, 0, -6); g.userData.dept = SH; SH.group = g; world.add(g); domes.push(g);
+    if (GAME_MODE === 'A') { g.visible = false; domes.pop(); }   // Category A: no shelter building
+  })();
+
+  // ---------- the shelter interior: 10 seats, 10 suit lockers, radiation boards ----------
+  function buildShelterInterior() {
+    const g = new THREE.Group(), W = 32, H = 10, D = 22;
+    const Dk = mat(0x1b2029, { roughness: .6, metalness: .5 }), Y = mat(0xe8b520, { roughness: .45, metalness: .5 }), grey = mat(0xaab2c0, { roughness: .5, metalness: .5 }), blue = mat(0x1f3f8f, { roughness: .8, metalness: .1 });
+    const wm = (w, h, tint) => { const t = panelBase.clone(); t.needsUpdate = true; t.repeat.set(w / 6, h / 6); return mat(tint, { map: t, roughness: .5, metalness: .35, envMapIntensity: .6 }); };
+    const plane = (w, h, m, x, y, z, ry = 0, rx = 0) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m); p.position.set(x, y, z); p.rotation.set(rx, ry, 0); g.add(p); return p; };
+    plane(W, D, wm(W, D, 0x353b48), 0, 0, 0, 0, -Math.PI / 2); plane(W, D, wm(W, D, 0x8e97a8), 0, H, 0, 0, Math.PI / 2);
+    plane(W, H, wm(W, H, 0x8e97a8), 0, H / 2, -D / 2); plane(W, H, wm(W, H, 0x8e97a8), 0, H / 2, D / 2, Math.PI);
+    plane(D, H, wm(D, H, 0x8e97a8), -W / 2, H / 2, 0, Math.PI / 2); plane(D, H, wm(D, H, 0x8e97a8), W / 2, H / 2, 0, -Math.PI / 2);
+    box(g, W, .3, .2, Y, 0, .15, -D / 2 + .1); box(g, W - 8, .03, .5, hazMat, 0, .02, -6.2);
+    [-8, 0, 8].forEach(x => box(g, .7, .12, D - 2, glow(0xfff1d0, 1.6), x, H - .1, 0));
+    // big trefoil + two boards on the back wall
+    const [tc, tx] = cv(256, 256); tx.fillStyle = '#e8b520'; tx.beginPath(); tx.arc(128, 128, 124, 0, 6.283); tx.fill(); trefoil(tx, 128, 128, 96, '#14161a', '#e8b520');
+    plane(4.4, 4.4, new THREE.MeshBasicMaterial({ map: tex(tc), transparent: true, toneMapped: false }), 0, 6.4, -D / 2 + .05);
+    const S1 = mkScreen(512, 288), S2 = mkScreen(512, 288); drawRadScreen(S1); drawCrewScreen(S2);
+    [[9, S1], [-9, S2]].forEach(([x, S]) => { box(g, 7.6, 4.5, .2, Dk, x, 6.4, -D / 2 + .15); plane(7.2, 4.05, new THREE.MeshBasicMaterial({ map: S.t, toneMapped: false }), x, 6.4, -D / 2 + .27); });
+    // 10 seats (crew sit down as they arrive)
+    const seats = [];
+    for (let i = 0; i < 10; i++) {
+      const s = new THREE.Group(); s.position.set(-12.15 + i * 2.7, 0, -8.4); g.add(s);
+      box(s, 2, .7, 1.9, grey, 0, .35, 0); box(s, 1.8, .28, 1.6, blue, 0, .84, .05); box(s, 1.8, 2.3, .4, grey, 0, 2.0, -.8); box(s, 1.5, 1.9, .12, blue, 0, 2.0, -.58);
+      box(s, .22, .4, 1.5, grey, -.95, 1.35, 0); box(s, .22, .4, 1.5, grey, .95, 1.35, 0);
+      const a = makeAstronaut(.78); a.position.set(0, .09, .12);
+      a.userData.legs.forEach(l => l.rotation.x = -Math.PI / 2); a.userData.arms.forEach(r => r.rotation.x = -.5); a.visible = false; s.add(a); seats.push(a);
+    }
+    // 10 suit lockers (5 on each side wall)
+    for (let k = 0; k < 10; k++) {
+      const sd = k < 5 ? -1 : 1, z = -8 + (k % 5) * 4;
+      box(g, .5, 4.4, 3.2, Dk, sd * 15.7, 2.3, z);
+      const su = makeAstronaut(.95); su.position.set(sd * 14.6, .15, z); su.rotation.y = sd > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(su);
+      box(g, .1, .12, 3, glow(0x6ab4ff, 1.6), sd * 14.35, 4.5, z);
+      const lb = label('SUIT ' + (k + 1), '#ffd36a', 256, 96, 44); lb.scale.set(2.2, .8, 1); lb.position.set(sd * 14.2, 5.3, z); g.add(lb);
+    }
+    g.add(new THREE.AmbientLight(0xffffff, .55));
+    const l1 = new THREE.PointLight(0xfff4d6, 1.6, 45); l1.position.set(0, 9, 0); g.add(l1);
+    const l2 = new THREE.PointLight(0xfff4d6, 1.2, 40); l2.position.set(0, 8, -8); g.add(l2);
+    return { g, seats, S1, S2 };
+  }
+  function enterShelter(d) {
+    busy = true; line.textContent = ''; const p = d.group.position;
+    gsap.timeline()
+      .to(camera.position, { x: p.x, y: 3, z: p.z + 17, duration: 2.2, ease: 'power2.inOut' }, 0)
+      .to(look, { x: p.x, y: 3, z: p.z, duration: 2.2, ease: 'power2.inOut' }, 0)
+      .to(fade, { opacity: 1, duration: .6 })
+      .add(() => {
+        world.visible = false; shInt = buildShelterInterior(); interior = shInt.g; scene.add(interior); scene.environment = envIn;
+        camIn = { pos: [0, 4.6, 10], look: [0, 3.4, -6] }; camera.position.set(0, 4.6, 10); look.set(0, 3.4, -6);
+        blinkers = []; alarm = null; spinners = []; intAstro = null; hintObj = null; hintRing = null; clickables = null; lifeDept = null; rad.ic = null;
+        nameChip.textContent = d.name; info.style.display = 'block'; backBtn.style.display = 'inline-flex'; state = 'inside';
+        line.textContent = alertOn() ? 'Stay here until the storm is over. The shelter blocks the radiation.' : 'The shelter has a seat and a spacesuit for each of the 10 astronauts.';
+      })
+      .to(fade, { opacity: 0, duration: .8 })
+      .add(() => { busy = false; });
+  }
+
+  // ---------- intercom in every department ----------
+  const icCache = {};
+  function icTex(mode) {
+    if (icCache[mode]) return icCache[mode];
+    const [c, x] = cv(256, 160), col = { standby: '#4ff0c8', alert: '#ff5d5d', done: '#7ddba3' }[mode];
+    const L = { standby: ['ALL-CALL INTERCOM', 'STANDBY', 'No warning active'], alert: ['RADIATION ALERT', 'CLICK TO ALERT', 'THIS CREW'], done: ['CREW ALERTED', 'Heading to', 'the shelter'] }[mode];
+    x.fillStyle = mode === 'alert' ? '#2a0606' : '#04121a'; x.fillRect(0, 0, 256, 160); x.strokeStyle = col; x.lineWidth = 5; x.strokeRect(3, 3, 250, 154);
+    x.fillStyle = col; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = '700 24px Barlow, sans-serif'; x.fillText(L[0], 128, 34);
+    x.font = '700 30px Barlow, sans-serif'; x.fillText(L[1], 128, 82); x.fillStyle = '#eef1f6'; x.font = '600 22px Barlow, sans-serif'; x.fillText(L[2], 128, 126);
+    return (icCache[mode] = tex(c));
+  }
+  function makeIntercom() {
+    const g = new THREE.Group();
+    cyl(g, .8, .9, .25, darkM, 0, .12, 0, 20); box(g, .55, 2.2, .5, darkM, 0, 1.3, 0); box(g, 2.4, 1.6, .45, mat(0x2c3547, { metalness: .6, roughness: .4 }), 0, 3.1, 0);
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 1.3), new THREE.MeshBasicMaterial({ map: icTex('standby'), toneMapped: false })); scr.position.set(0, 3.15, .24); g.add(scr);
+    const btn = cyl(g, .28, .28, .14, glow(0xff3a30, 1.6), 0, 2.15, .3, 20); btn.rotation.x = Math.PI / 2;
+    const halo = glowSprite(0xff3030, 5, 0); halo.position.set(0, 3.1, .6); halo.raycast = () => { }; g.add(halo);
+    g.userData = { scr, btn, halo, mode: 'standby' }; return g;
+  }
+  function radAddInterior(d, g) {   // called from enter()
+    const ic = makeIntercom(), p = IC_POS[d.id] || [-5, 1.5];
+    ic.position.set(p[0], 0, p[1]); ic.rotation.y = .3; ic.userData.dept = d; g.add(ic); rad.ic = ic;
+  }
+  const rayHit = (e, obj) => { ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera); return ray.intersectObject(obj, true).length > 0; };
+  function alertDept(d) {
+    const c = rad.crew[d.id];
+    if (!alertOn() || !c) { lvSay('📢 <b>All-call intercom</b><br>Standby. There is no radiation warning right now.', ''); return; }
+    if (c.alerted) { lvSay('✔ <b>' + d.name + '</b> crew was already alerted.', 'good'); return; }
+    c.alerted = true; c.tAlert = rad.el; beep(660, .12, 0); beep(990, .2, .14);
+    lvSay('📢 <b>' + d.name + ' crew alerted!</b><br>' + c.n + ' astronauts reach the shelter in about ' + Math.ceil(rad.react + c.travel) + ' s. Now alert the other departments.', 'good');
+    if (DEPTS.every(x => rad.crew[x.id].alerted)) line.textContent = 'Everyone is alerted. Head for the shelter and watch the clock.';
+  }
+  addEventListener('pointerdown', e => { if (state === 'inside' && !busy && rad.ic && rayHit(e, rad.ic)) alertDept(rad.ic.userData.dept); });
+  addEventListener('pointermove', e => { if (state === 'inside' && !busy && rad.ic && alertOn() && rayHit(e, rad.ic)) canvas.style.cursor = 'pointer'; });
+
+  // ---------- storm particles + arrow to the shelter ----------
+  const parts = (() => {
+    const N = 400, p = new Float32Array(N * 3); for (let i = 0; i < N; i++) { p[i * 3] = rnd(-40, 40); p[i * 3 + 1] = rnd(-10, 30); p[i * 3 + 2] = rnd(-40, 40); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+    const o = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xfff0a0, size: 2.5, sizeAttenuation: false, transparent: true, opacity: .8, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    o.frustumCulled = false; o.visible = false; world.add(o); return o;
+  })();
+  const shArrow = document.createElement('div'); shArrow.className = 'dir l'; shArrow.style.setProperty('--c', '#ffd36a'); shArrow.style.display = 'none'; arrowsEl.appendChild(shArrow);
+  const _sv = new THREE.Vector3();
+
+  // ---------- panels ----------
+  function decideHTML() {
+    const opt = (id, t, s) => `<button class="evp-prio${rad.sel === id ? ' on' : ''}" data-act="ropt-${id}"><b>${id}</b>${t}<small>${s}</small></button>`;
+    return `<div class="evp-card"><div class="evp-head"><b>☢ RADIATION WARNING · NASA DONKI: SEP EVENT</b></div>
+      <p class="evp-txt">NASA detects a solar particle event. The astronauts receive a radiation warning and must reach the designated Radiation Shelter before the particle storm peaks.</p>
+      ${rad.feed ? `<div class="evp-note">🛰 ${rad.feed}</div>` : ''}
+      <div class="evp-h">WHAT SHOULD THE CREW DO?</div>
+      <div class="evp-prios">${opt('A', 'Move all astronauts to the radiation shelter immediately', 'Outdoor work stops. Exposure is reduced.')}${opt('B', 'Allow astronauts to finish their outdoor tasks before entering', 'Astronauts stay exposed for longer. Mission safety decreases.')}</div>
+      <div class="lv-tips">💡 Either way, you must visit each department and use its intercom to tell the crew. The shelter is the octagon building in the middle of the base.</div>
+      <button class="evp-go" data-act="rgo"${rad.sel ? '' : ' disabled'}>Confirm ▶</button></div>`;
+  }
+  function resultHTML() {
+    const R = rad.res, E = EVENTS.radiation;
+    const crew = DEPTS.map(d => {
+      const c = rad.crew[d.id], hurt = c.dose >= HURT, mn = !hurt && c.dose >= 15, col = hurt ? '#ff5d5d' : mn ? '#ffb066' : '#7ddba3';
+      return `<div class="evp-m" style="grid-template-columns:150px 1fr 120px"><span>${d.name} (${c.n})</span><div class="evp-bar"><i style="width:${Math.min(100, c.dose)}%;background:${col}"></i></div><em style="color:${col}">${hurt ? 'Injured' : mn ? 'Minor exposure' : 'Safe'}</em></div>`;
+    }).join('');
+    const dm = rad.dmg.map(r => `<div class="evp-m" style="grid-template-columns:150px 1fr 100px"><span>${r.name}</span><div class="evp-bar"><i style="width:${r.to}%;background:${LEVEL[lvOf(r.to)]}"></i><u style="left:${r.from}%"></u></div><em>${r.from}→${r.to}%</em></div>`).join('');
+    const fu = rad.follow === 'flare' ? 'Communication: the antenna is damaged and signals are being jammed.' : 'Life Support: the battery is nearly empty and the CO₂ filter is losing power.';
+    return `<div class="evp-card"><div class="evp-head"><b>☢ RADIATION RESULT</b></div>
+      <div class="evp-res ${R.cls}">${R.head}</div>
+      <p class="evp-txt">${rad.choice === 'A' ? 'Astronaut exposure was reduced and outdoor work stopped.' : 'Astronauts stayed exposed for longer, so mission safety decreased.'} Mission safety: <b>${R.safety}%</b></p>
+      <div class="evp-h">CREW (radiation dose)</div>${crew}
+      <div class="evp-h">EQUIPMENT DAMAGED BY THE STORM (white line = before)</div>${dm}
+      <div class="lv-tips">⚠ New crisis developing: ${fu}</div>
+      <div class="evp-learn">📌 <b>REMEMBER:</b> ${E.lesson}</div>
+      <button class="evp-go" data-act="rdone">Continue ▶</button></div>`;
+  }
+  radPanel.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b || b.disabled) return; const a = b.dataset.act;
+    if (a === 'ropt-A' || a === 'ropt-B') { rad.sel = a.slice(5); radPanel.innerHTML = decideHTML(); }
+    else if (a === 'rgo') startWarn();
+    else if (a === 'rdone') endRad();
+  });
+
+  // ---------- event flow ----------
+  function triggerRadiation() {
+    if (rad.on || flareActive || lifeEv || state !== 'base' || busy) return;
+    rad.on = true; rad.seen = true; rad.phase = 'decide'; rad.choice = null; rad.sel = null; rad.feed = ''; rad.follow = null; radInit();
+    const E = EVENTS.radiation; radToast(E.title, E.msg, E.goal, 9000);
+    evFlash.animate([{ opacity: .9 }, { opacity: 0 }], { duration: 1000 }); beep(880, .18, 0); beep(660, .18, .25); beep(880, .18, .5);
+    state = 'radev'; line.textContent = ''; canvas.style.cursor = 'default';
+    radPanel.innerHTML = decideHTML(); radPanel.style.display = 'flex'; gsap.fromTo(radPanel.firstChild, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: .35 });
+    try {   // optional live look at NASA DONKI (falls back silently)
+      const iso = d => new Date(d).toISOString().slice(0, 10);
+      fetch('https://api.nasa.gov/DONKI/SEP?startDate=' + iso(Date.now() - 30 * 864e5) + '&endDate=' + iso(Date.now()) + '&api_key=DEMO_KEY')
+        .then(r => r.json()).then(a => {
+          rad.feed = Array.isArray(a) && a.length ? 'NASA DONKI latest SEP event: ' + a[a.length - 1].sepID + ' · ' + String(a[a.length - 1].eventTime || '').slice(0, 10) : 'NASA DONKI: no SEP events in the last 30 days. This is a training scenario.';
+          if (rad.phase === 'decide') radPanel.innerHTML = decideHTML();
+        }).catch(() => { });
+    } catch (e) { }
+  }
+  function startWarn() {
+    const C = RADCFG[rad.sel]; rad.choice = rad.sel; rad.T = C.T; rad.react = C.react; rad.el = 0; rad.phase = 'warn';
+    radPanel.style.display = 'none'; state = 'base';
+    line.textContent = 'Visit every department and click its intercom to alert the crew. The shelter is the octagon building in the middle.';
+    if (rad.choice === 'B') radToast('OUTDOOR TASKS CONTINUE', 'The crew keeps working outside. They will be slow to react and more exposed.', '', 6000);
+  }
+  function stormStart() {
+    DEPTS.forEach(d => {
+      const prot = rad.crew[d.id].alerted;   // alerted crews put their equipment in safe mode
+      (DMG[d.id] || []).forEach(([i, un, pr]) => {
+        const r = d.res[i], amt = Math.round((prot ? pr : un) * (rad.choice === 'B' ? 1.25 : 1)), from = r.pct;
+        r.pct = Math.max(3, from - amt); if (r === lifeD.res[2]) pw.level = Math.max(0, pw.level - amt); rad.dmg.push({ name: r.name, from, to: r.pct }); rad.dsum[d.id] = (rad.dsum[d.id] || 0) + from - r.pct;
+      });
+    });
+    evFlash.animate([{ opacity: .9 }, { opacity: 0 }], { duration: 1200 }); beep(220, .4, 0); beep(180, .4, .45);
+    radToast('STORM PEAK!', 'Radiation is at its maximum. Anyone outside is in danger. Equipment is being hit.', 'Stay inside the shelter!', 7000);
+  }
+  function radTick(dt) {
+    rad.el += dt;
+    if (rad.phase === 'warn' && rad.el >= rad.T) { rad.phase = 'storm'; stormStart(); }
+    if (rad.phase === 'storm' && rad.el >= rad.T + STORM_LEN) rad.phase = 'done';
+    const f = rad.phase === 'warn' ? 1 + rad.el / rad.T : 6, R = RADCFG[rad.choice];
+    DEPTS.forEach(d => {
+      const c = rad.crew[d.id];
+      if (c.alerted && !c.arrived && rad.el - c.tAlert >= rad.react + c.travel) c.arrived = true;
+      c.dose += c.arrived ? f * .04 * dt : f * (rad.phase === 'storm' ? .67 : .09 * R.rate) * dt;
+    });
+    rad.seated = radIn();
+  }
+  function showRadResult() {
+    rad.phase = 'result';
+    const cs = DEPTS.map(d => rad.crew[d.id]);
+    const inj = cs.reduce((s, c) => s + (c.dose >= HURT ? c.n : 0), 0), mn = cs.reduce((s, c) => s + (c.dose < HURT && c.dose >= 15 ? c.n : 0), 0);
+    const safety = Math.max(0, Math.min(100, 100 - inj * 9 - mn * 3 - (rad.choice === 'B' ? 15 : 0)));
+    pw.crew = Math.max(0, pw.crew - inj * 6 - mn * 2); pw.handled++;   // radiation exposure hurts the crew
+    rad.res = { safety, cls: inj ? 'bad' : (mn || rad.choice === 'B') ? 'ok' : 'good', head: inj ? inj + ' astronaut' + (inj > 1 ? 's were' : ' was') + ' injured' : mn ? 'Everyone survived, with minor exposure' : 'All 10 astronauts are protected!' };
+    rad.follow = (rad.dsum.comms || 0) >= (rad.dsum.life || 0) ? 'flare' : 'co2';
+    const E = EVENTS.radiation, l = lessons.radiation || (lessons.radiation = { text: E.lesson, tries: 0, wins: 0 });
+    l.tries++; if (!inj && rad.choice === 'A') l.wins++; saveLessons();
+    state = 'radev'; canvas.style.cursor = 'default'; radPanel.innerHTML = resultHTML(); radPanel.style.display = 'flex';
+    gsap.fromTo(radPanel.firstChild, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: .35 });
+  }
+  function endRad() {
+    radPanel.style.display = 'none'; rad.on = false; rad.phase = 'idle'; rad.seated = 0; rad.followAt = clock.getElapsedTime() + 5;
+    walkers.forEach(w => { w.visible = true; delete w.userData.from; });
+    state = interior ? 'inside' : 'base'; evTimer = nextEvDelay(); line.textContent = '';
+  }
+ /* addEventListener('keydown', e => { if (e.key && e.key.toLowerCase() === 'r' && state === 'base' && !busy) triggerRadiation(); }); */   // test shortcut: delete when finished
+
+  // ---------- per-frame update (called from the main loop) ----------
+  let radLast = 0, radDraw = 0;
+  function radUpdate(t) {
+    if (GAME_MODE === 'A') return;   // Category A has no radiation gameplay
+    const dt = Math.min(t - radLast, .1); radLast = t;
+    if (alertOn()) radTick(dt);
+    if (rad.on && rad.phase === 'done' && !busy && (state === 'base' || state === 'inside')) showRadResult();
+    // outdoor crew run to the shelter door
+    if (rad.on && world.visible) DEPTS.forEach(d => {
+      const c = rad.crew[d.id];
+      (WALKER_OF[d.id] || []).forEach(i => {
+        const w = walkers[i]; if (!c.alerted) { w.visible = true; return; }
+        const u = (rad.el - c.tAlert - rad.react) / c.travel; if (u <= 0) return;
+        if (!w.userData.from) w.userData.from = w.position.clone();
+        if (u >= 1) { w.visible = false; return; }
+        w.visible = true; w.position.lerpVectors(w.userData.from, DOOR, u); w.rotation.y = Math.atan2(DOOR.x - w.userData.from.x, DOOR.z - w.userData.from.z); walkPose(w, t, 0, 8);
+      });
+    });
+    // atmosphere: sun flare, particles, red edges, noise
+    const storm = rad.on && rad.phase === 'storm';
+    if (alertOn()) { const f = (storm ? 1.7 : 1.25) + Math.sin(t * 6) * .3; sunGlow.scale.set(650 * f, 650 * f, 1); sunHaze.scale.set(1500 * f, 1500 * f, 1); sunHaze.material.opacity = .4; }
+    parts.visible = storm && world.visible;
+    if (parts.visible) {
+      const p = parts.geometry.attributes.position.array; parts.position.copy(camera.position);
+      for (let i = 0; i < p.length; i += 3) { p[i + 1] -= dt * 45; p[i] += dt * 18; if (p[i + 1] < -10) p[i + 1] = 30; if (p[i] > 40) p[i] = -40; }
+      parts.geometry.attributes.position.needsUpdate = true;
+    }
+    radVig.style.display = storm && !(shInt && interior === shInt.g) ? 'block' : 'none';
+    if (storm) evNoise.style.display = 'block';
+    // shelter building + interior displays
+    const al = alertOn();
+    shRing.material.opacity = al ? .3 + .35 * Math.abs(Math.sin(t * 4)) : .22; shRing.material.color.set(al ? 0xff3a30 : 0xffd36a);
+    shBeacon.material.opacity = al ? Math.max(0, Math.sin(t * 6)) * .9 : 0; shLight.material.emissive.set(al ? 0xff3a30 : 0x3dff88);
+    if (t - radDraw > .4) {
+      radDraw = t;
+      if (world.visible) drawExt(shExtScr);
+      if (shInt && interior === shInt.g) { drawRadScreen(shInt.S1); drawCrewScreen(shInt.S2); }
+    }
+    if (shInt && interior === shInt.g) shInt.seats.forEach((a, i) => { a.visible = i < rad.seated; });
+    const cr = info.querySelector('.chip-row'); if (cr) cr.style.display = shInt && interior === shInt.g ? 'none' : '';
+    // intercom screen
+    if (rad.ic) {
+      const u = rad.ic.userData, c = rad.crew[u.dept.id], m = al && c ? (c.alerted ? 'done' : 'alert') : 'standby';
+      if (u.mode !== m) { u.mode = m; u.scr.material.map = icTex(m); u.scr.material.needsUpdate = true; }
+      u.halo.material.opacity = m === 'alert' ? .35 + .35 * Math.abs(Math.sin(t * 5)) : 0; u.btn.material.emissive.set(m === 'done' ? 0x3dff88 : 0xff3a30);
+    }
+    // arrow to the shelter while the alarm runs
+    if (al && state === 'base') {
+      _sv.set(0, 4, -6).project(camera); const behind = _sv.z > 1;
+      if (!behind && Math.abs(_sv.x) < .88) shArrow.style.display = 'none';
+      else {
+        const side = (_sv.x < 0) !== behind ? 'l' : 'r', txt = (side === 'l' ? '<b>◀</b> ' : '<b>▶</b> ') + '☢ Radiation Shelter <small>' + Math.round(Math.hypot(camera.position.x, camera.position.z + 6)) + ' m</small>';
+        if (shArrow._s !== side) { shArrow.className = 'dir ' + side; shArrow._s = side; } if (shArrow._t !== txt) { shArrow.innerHTML = txt; shArrow._t = txt; }
+        shArrow.style.top = (innerHeight * .42 - 46) + 'px'; shArrow.style.display = 'flex';
+      }
+    } else shArrow.style.display = 'none';
+    // countdown HUD
+    const show = rad.on && (rad.phase === 'warn' || rad.phase === 'storm' || rad.phase === 'done');
+    radHudEl.style.display = show ? 'block' : 'none';
+    if (show) {
+      const head = rad.phase === 'warn' ? `<div class="rh-t">${fmt(rad.T - rad.el)}</div><div>until the radiation peak</div>` : rad.phase === 'storm' ? `<div class="rh-t" style="color:#ff5d5d">STORM!</div><div>Peak radiation. Stay in the shelter.</div>` : `<div class="rh-t" style="color:#7ddba3">OVER</div><div>The storm has passed.</div>`;
+      const rows = DEPTS.map(d => {
+        const c = rad.crew[d.id], s = crewStatus(c), col = { 'IN SHELTER': '#7ddba3', 'EN ROUTE': '#ffb066', 'OUTDOORS': '#ff5d5d', 'INJURED': '#ff5d5d' }[s];
+        const lab = s === 'OUTDOORS' ? '📢 ALERT NEEDED' : s === 'EN ROUTE' ? 'EN ROUTE ' + Math.max(0, Math.ceil(c.tAlert + rad.react + c.travel - rad.el)) + 's' : s;
+        return `<div class="rh-r"><span>${d.name}</span><span style="color:${col};font-weight:700">${lab}</span></div>`;
+      }).join('');
+      const html = `<b>☢ RADIATION STORM</b>${head}${rows}<div class="rh-r"><span>Shelter</span><span>${radIn()} / 10 inside</span></div>`;
+      if (html !== radHudKey) { radHudEl.innerHTML = html; radHudKey = html; }
+    }
+    // forced follow-up crisis after the storm
+    if (rad.follow && !rad.on && t >= rad.followAt && state === 'base' && !busy && !lifeEv && !flareActive) {
+      const f = rad.follow; rad.follow = null; if (f === 'flare') triggerEvent('flare'); else triggerLifeEvent('co2');
+    }
+  }
 
   // intro: landing + story lines
   gsap.to(camera.position, { x: HOME_CAM.x, y: HOME_CAM.y, z: HOME_CAM.z, duration: 5.5, ease: 'power3.out' });
@@ -2055,6 +2703,7 @@ function buildDeptConsole(g, d) {
     }
     updateEvents(t);
     updateLifeEvents(t);
+    radUpdate(t);
       updateStatus(t); 
     aim(t);
     renderer.render(scene, camera);

@@ -19,7 +19,7 @@
   const go = document.getElementById("go");
   const hint = document.getElementById("hint");
 
-  try { localStorage.removeItem("mode"); } catch (e) {}      // nothing is pre-selected on a new visit
+  let savedMode = null; try { savedMode = localStorage.getItem("mode"); } catch (e) {}   // the last chosen category is remembered
 
   function choose(m) {
     cards.forEach(c => {
@@ -33,5 +33,6 @@
     hint.textContent = "Category " + m + " selected: " + TITLES[m] + ".";
   }
   cards.forEach(c => c.addEventListener("click", () => choose(c.dataset.mode)));
+  if (savedMode === "A" || savedMode === "B") choose(savedMode);   // pre-select it (a new player has none)
    go.addEventListener("click", () => { if (!go.disabled) location.replace(NEXT_PAGE); });
 })();
