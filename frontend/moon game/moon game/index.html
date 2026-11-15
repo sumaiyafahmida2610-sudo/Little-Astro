@@ -155,17 +155,17 @@ location.replace("mode.html");            // skip briefing and registration     
       });
     })();
   </script>
-  <script>
-    // Returning player (already registered or logged in on this device): skip the preface and registration.
-    (function () {
-      try {
-        var a = JSON.parse(localStorage.getItem("astronaut") || "null"), b = document.getElementById("start-btn");
-        if (a && a.name && b) {
-          var m = localStorage.getItem("mode"); b.href = (m === "A" || m === "B") ? "base.html" : "mode.html"; b.textContent = "Continue mission";   // saved category: straight into the game
-          b.addEventListener("click", function () { try { sessionStorage.setItem("astroViaLogin", "1"); } catch (e) {} });   // mode.html's Back goes to the title, not to registration
-        }
-      } catch (e) {}
-    })();
-  </script>
+<script>
+  // Always show the title page first.
+  // Keep the existing registration, login, and mission logic unchanged.
+  (function () {
+    var b = document.getElementById("start-btn");
+
+    if (b) {
+      b.href = "briefing.html";
+      b.textContent = "🚀 Start mission";
+    }
+  })();
+</script>
 </body>
 </html>
