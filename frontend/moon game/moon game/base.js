@@ -1437,7 +1437,8 @@ function buildDeptConsole(g, d) {
   // =====================================================================
   let lifeEv = null, reserveObjs = null, hoverRes = null, hintUntil = 0, lastEv = null, sayTimer = null, lifeLast = 0;
   const lifeD = DEPTS.find(d => d.id === 'life');
-  const EVENT_POOL = ['flare', 'co2', 'leak', 'cold'];
+    const MODE = (() => { try { return localStorage.getItem('mode') || 'A'; } catch (e) { return 'A'; } })();
+  const EVENT_POOL = MODE === 'B' ? ['flare', 'co2', 'leak', 'cold'] : ['co2', 'leak', 'cold'];
 
   const RES = {
     o2: { name: 'Oxygen reserve tank', info: 'Spare breathing oxygen for the crew.' },
@@ -1855,7 +1856,7 @@ function buildDeptConsole(g, d) {
 
 
 
-  // =====================================================================
+    // =====================================================================
   //  BATTERY + POWER MODES  and  MISSION MENU (way back to the start)
   //  Frontend only: everything lives in the browser.
   // =====================================================================
@@ -1994,16 +1995,6 @@ function buildDeptConsole(g, d) {
     if (pw.started && pw.level < BATT.WARN && !pw.guided && !pw.guideOpen && (state === 'base' || state === 'inside') && !busy) openGuide();
     if (pw.level <= 0 && !pw.empty) { pw.empty = true; btNotify('🪫 <b>Battery empty!</b> The units have almost no power left.', '#ff5d5d', 9000); }
   }, 250);
-
-
-
-
-
-
-
-
-
-
 
 
 
