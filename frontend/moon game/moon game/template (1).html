@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+  LITTLE ASTRO'S ADVENTURE: PAGE TEMPLATE
+  How to use:
+   1. Copy this file and rename it (briefing.html, mode.html, game.html ...).
+   2. Change the 4 things marked  >>> CHANGE  below.
+   3. Delete the snippets you do not need. Do not add new colors or fonts.
+  Needs in the same folder: style.css, app.js
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Little Astro’s Adventure | Page name</title>   <!-- >>> CHANGE 1: page name -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Big+Shoulders+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Twinkling stars (made by app.js). Keep this line on every page. -->
+  <div class="stars" id="stars" aria-hidden="true"></div>
+
+  <main class="screen">
+    <div style="width:min(44rem,100%)">
+
+      <!-- Step badge -->
+      <span class="chip chip-mint">Level 2: Mission Briefing</span>                 <!-- >>> CHANGE 2: level name -->
+
+      <!-- Page heading + short intro -->
+      <h1 class="h2" style="margin-top:.8rem">Page heading</h1>                     <!-- >>> CHANGE 3: heading -->
+      <p class="lead">One short sentence that tells the player what to do here.</p>
+
+      <!-- ===== CONTENT: use panels for text, cards, forms ===== -->
+      <section class="panel">
+        <p>Put your page content inside a panel.</p>
+
+        <!-- Optional: small colourful badges -->
+        <div class="chip-row" style="justify-content:flex-start;margin-top:1rem">
+          <span class="chip">Oxygen</span>
+          <span class="chip chip-lemon">Power</span>
+          <span class="chip chip-pink">Signal delay</span>
+        </div>
+      </section>
+
+      <!-- Optional: a form field (see register.html for validation in register.js)
+      <div class="field" id="f-example">
+        <label for="example">Label</label>
+        <input id="example" type="text" placeholder="Type here">
+        <span class="hint">Helper text.</span>
+        <span class="error" role="alert"></span>
+      </div>
+      -->
+
+      <!-- Optional: a choice card. Add the class "selected" to the chosen one.
+      <button type="button" class="panel selected" style="width:100%;text-align:left">Option title</button>
+      -->
+
+      <!-- ===== BUTTONS: Back (secondary) + Next (main) ===== -->
+      <div class="actions" style="margin-top:1.6rem;justify-content:space-between">
+        <a class="btn btn-ghost" href="index.html">Back</a>                         <!-- previous page -->
+        <a class="btn btn-play" href="next-page.html">Next</a>                      <!-- >>> CHANGE 4: next page -->
+      </div>
+
+      <!-- Progress bar: 25%, 50%, 75%, 100% -->
+      <div class="level">
+        Step 2 of 4
+        <div class="level-bar"><div class="level-fill" style="--pct:50%"></div></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <!-- Page logic: <script src="yourpage.js"></script> -->
+</body>
+</html>
